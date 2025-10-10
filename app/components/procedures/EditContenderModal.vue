@@ -131,7 +131,7 @@ function onCancel() {
         >
           <USelect
             v-model="state.status"
-            :options="statusOptions"
+            :items="statusOptions"
             placeholder="Select status"
             class="w-full"
           />

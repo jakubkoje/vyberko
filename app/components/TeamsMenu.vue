@@ -5,40 +5,61 @@ defineProps<{
   collapsed?: boolean
 }>()
 
-const teams = ref([{
-  label: 'Nuxt',
-  avatar: {
-    src: 'https://github.com/nuxt.png',
-    alt: 'Nuxt',
-  },
-}, {
-  label: 'NuxtHub',
-  avatar: {
-    src: 'https://github.com/nuxt-hub.png',
-    alt: 'NuxtHub',
-  },
-}, {
-  label: 'NuxtLabs',
-  avatar: {
-    src: 'https://github.com/nuxtlabs.png',
-    alt: 'NuxtLabs',
-  },
-}])
-const selectedTeam = ref(teams.value[0])
+const { user } = useUserSession()
+
+// Fetch user's organizations
+const { data: orgData, refresh } = await useFetch('/api/me/organizations')
+
+const organizations = computed(() => {
+  return orgData.value?.organizations.map(org => ({
+    id: org.id,
+    label: org.name,
+    avatar: {
+      src: `https://api.dicebear.com/7.x/initials/svg?seed=${org.name}`,
+      alt: org.name,
+    },
+  })) || []
+})
+
+const selectedOrganization = computed(() => {
+  if (orgData.value?.currentOrganization) {
+    return {
+      id: orgData.value.currentOrganization.id,
+      label: orgData.value.currentOrganization.name,
+      avatar: {
+        src: `https://api.dicebear.com/7.x/initials/svg?seed=${orgData.value.currentOrganization.name}`,
+        alt: orgData.value.currentOrganization.name,
+      },
+    }
+  }
+
+  // Fallback to first organization if no current org set
+  return organizations.value[0] || {
+    label: 'No Organization',
+    avatar: {
+      src: 'https://api.dicebear.com/7.x/initials/svg?seed=NO',
+      alt: 'No Organization',
+    },
+  }
+})
 
 const items = computed<DropdownMenuItem[][]>(() => {
-  return [teams.value.map(team => ({
-    ...team,
+  if (organizations.value.length === 0) {
+    return [[{
+      label: 'No organizations',
+      disabled: true,
+    }]]
+  }
+
+  return [organizations.value.map(org => ({
+    ...org,
+    checked: org.id === selectedOrganization.value?.id,
+    type: 'checkbox' as const,
     onSelect() {
-      selectedTeam.value = team
+      // TODO: Implement organization switching
+      console.log('Switch to organization:', org.id)
     },
-  })), [{
-    label: 'Create team',
-    icon: 'i-lucide-circle-plus',
-  }, {
-    label: 'Manage teams',
-    icon: 'i-lucide-cog',
-  }]]
+  }))]
 })
 </script>
 
@@ -50,8 +71,8 @@ const items = computed<DropdownMenuItem[][]>(() => {
   >
     <UButton
       v-bind="{
-        ...selectedTeam,
-        label: collapsed ? undefined : selectedTeam?.label,
+        ...selectedOrganization,
+        label: collapsed ? undefined : selectedOrganization?.label,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down',
       }"
       color="neutral"

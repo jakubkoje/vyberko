@@ -107,10 +107,13 @@ function onCancel() {
         >
           <USelect
             v-model="state.roleId"
-            :options="roles.map(r => ({ label: r.name, value: r.id }))"
+            :items="roles.map(r => ({ label: r.name, value: r.id }))"
             placeholder="Select a role"
+            value-key="value"
+            label-key="label"
             class="w-full"
           />
+          {{ roles }}
         </UFormField>
       </UForm>
     </template>

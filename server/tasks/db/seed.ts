@@ -8,33 +8,224 @@ export default defineTask({
 
     const db = useDrizzle()
 
-    // 1. Seed Roles
-    console.log('📋 Seeding roles...')
+    // 1. Seed Roles (VK-specific roles)
+    console.log('📋 Seeding VK roles...')
     const rolesData = [
       {
-        name: 'owner',
-        description: 'Organization owner with full access',
-        permissions: { all: true },
-      },
-      {
         name: 'admin',
-        description: 'Administrator with management access',
-        permissions: { manage_users: true, manage_procedures: true, manage_surveys: true },
+        description: 'Admin/Secretary (Tajomník VK) - Full system access with 2FA',
+        permissions: {
+          manageUsers: true,
+          createProcedures: true,
+          manageProcedures: true,
+          createTests: true,
+          manageTests: true,
+          assignTests: true,
+          viewReports: true,
+          generateDocuments: true,
+          importDocuments: true,
+          manageCommission: true,
+          viewAllResults: true,
+        },
+        requires2FA: 1,
       },
       {
-        name: 'member',
-        description: 'Regular member with standard access',
-        permissions: { view_procedures: true, view_surveys: true },
+        name: 'subject_expert',
+        description: 'Subject Expert (Vecný gestor) - Creates test content',
+        permissions: {
+          createTests: true,
+          editOwnTests: true,
+          submitTestsForApproval: true,
+          viewOwnTests: true,
+        },
+        requires2FA: 0,
       },
       {
-        name: 'viewer',
-        description: 'Read-only access',
-        permissions: { view_only: true },
+        name: 'commission_chair',
+        description: 'Commission Chairman (Predseda komisie) - Leads evaluation',
+        permissions: {
+          viewCandidates: true,
+          viewTestResults: true,
+          evaluateCandidates: true,
+          viewDocuments: true,
+          submitEvaluations: true,
+          finalizeEvaluations: true,
+        },
+        requires2FA: 0,
+      },
+      {
+        name: 'commission_member',
+        description: 'Commission Member (Člen komisie) - Evaluates candidates',
+        permissions: {
+          viewCandidates: true,
+          viewTestResults: true,
+          evaluateCandidates: true,
+          viewDocuments: true,
+          submitEvaluations: true,
+        },
+        requires2FA: 0,
+      },
+      {
+        name: 'candidate',
+        description: 'Candidate (Uchádzač) - Takes tests',
+        permissions: {
+          takeTests: true,
+          viewOwnResults: true,
+        },
+        requires2FA: 0,
       },
     ]
 
     const roles = await db.insert(tables.roles).values(rolesData).returning()
-    console.log(`✅ Created ${roles.length} roles`)
+    console.log(`✅ Created ${roles.length} VK roles`)
+
+    // 2. Seed Written Exam Categories (6 types as per VK requirements)
+    console.log('📝 Seeding written exam categories...')
+    const writtenExamCategoriesData = [
+      {
+        slug: 'professional_knowledge',
+        nameSk: 'Odborný test',
+        nameEn: 'Professional Knowledge Test',
+        description: 'Test na overenie úrovne ovládania odborných vedomostí',
+        isActive: 1,
+      },
+      {
+        slug: 'general_knowledge',
+        nameSk: 'Všeobecný test',
+        nameEn: 'General Knowledge Test',
+        description: 'Test na overenie úrovne ovládania všeobecných vedomostí',
+        isActive: 1,
+      },
+      {
+        slug: 'state_language',
+        nameSk: 'Test zo štátneho jazyka',
+        nameEn: 'State Language Test',
+        description: 'Test na overenie úrovne ovládania štátneho jazyka',
+        isActive: 1,
+      },
+      {
+        slug: 'foreign_language',
+        nameSk: 'Test z cudzieho jazyka',
+        nameEn: 'Foreign Language Test',
+        description: 'Test na overenie úrovne ovládania cudzieho jazyka',
+        isActive: 1,
+      },
+      {
+        slug: 'it_skills',
+        nameSk: 'Test z práce s informačnými technológiami',
+        nameEn: 'IT Skills Test',
+        description: 'Test na overenie ovládania práce s informačnými technológiami',
+        isActive: 1,
+      },
+      {
+        slug: 'abilities_personality',
+        nameSk: 'Test na overenie schopností a vlastností',
+        nameEn: 'Abilities and Personality Test',
+        description: 'Test na overenie schopností a osobnostných vlastností',
+        isActive: 1,
+      },
+    ]
+
+    const writtenExamCategories = await db.insert(tables.writtenExamCategories).values(writtenExamCategoriesData).returning()
+    console.log(`✅ Created ${writtenExamCategories.length} written exam categories`)
+
+    // 3. Seed Oral Exam Categories (10 personality traits as per VK requirements)
+    console.log('🗣️ Seeding oral exam categories...')
+    const oralExamCategoriesData = [
+      {
+        slug: 'self_confidence',
+        nameSk: 'Sebadôvera',
+        nameEn: 'Self-confidence',
+        description: 'Schopnosť veriť vo vlastné schopnosti a rozhodnutia',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'conscientiousness_reliability',
+        nameSk: 'Svedomitosť a spoľahlivosť',
+        nameEn: 'Conscientiousness and Reliability',
+        description: 'Dôkladnosť a spoľahlivosť pri plnení úloh',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'independence',
+        nameSk: 'Samostatnosť',
+        nameEn: 'Independence',
+        description: 'Schopnosť pracovať samostatne bez dohľadu',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'motivation',
+        nameSk: 'Motivácia',
+        nameEn: 'Motivation',
+        description: 'Vnútorná motivácia a drive',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'adaptability_flexibility',
+        nameSk: 'Adaptabilita a flexibilita',
+        nameEn: 'Adaptability and Flexibility',
+        description: 'Schopnosť prispôsobiť sa zmenám',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'work_under_pressure',
+        nameSk: 'Schopnosť pracovať pod tlakom',
+        nameEn: 'Ability to Work Under Pressure',
+        description: 'Zvládanie stresových situácií',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'decision_making',
+        nameSk: 'Rozhodovacia schopnosť',
+        nameEn: 'Decision-making Ability',
+        description: 'Schopnosť robiť kvalitné rozhodnutia',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'communication_skills',
+        nameSk: 'Komunikačné zručnosti',
+        nameEn: 'Communication Skills',
+        description: 'Efektívna verbálna a neverbálna komunikácia',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'analytical_thinking',
+        nameSk: 'Analytické, koncepčné a strategické myslenie',
+        nameEn: 'Analytical, Conceptual and Strategic Thinking',
+        description: 'Schopnosť analyzovať a strategicky myslieť',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+      {
+        slug: 'management_skills',
+        nameSk: 'Riadiace schopnosti',
+        nameEn: 'Management Skills',
+        description: 'Schopnosť riadiť ľudí a procesy',
+        minRating: 1,
+        maxRating: 5,
+        isActive: 1,
+      },
+    ]
+
+    const oralExamCategories = await db.insert(tables.oralExamCategories).values(oralExamCategoriesData).returning()
+    console.log(`✅ Created ${oralExamCategories.length} oral exam categories`)
 
     // 2. Seed Organizations
     console.log('🏢 Seeding organizations...')
@@ -85,14 +276,14 @@ export default defineTask({
 
     // 4. Seed User-Organization relationships
     console.log('🔗 Seeding user-organization relationships...')
-    const ownerRole = roles.find(r => r.name === 'owner')!
     const adminRole = roles.find(r => r.name === 'admin')!
+    const commissionChairRole = roles.find(r => r.name === 'commission_chair')!
 
     const userOrganizationsData = [
-      { userId: users[0].id, organizationId: organizations[0].id, roleId: ownerRole.id },
-      { userId: users[1].id, organizationId: organizations[0].id, roleId: adminRole.id },
-      { userId: users[2].id, organizationId: organizations[1].id, roleId: ownerRole.id },
-      { userId: users[3].id, organizationId: organizations[2].id, roleId: ownerRole.id },
+      { userId: users[0].id, organizationId: organizations[0].id, roleId: adminRole.id },
+      { userId: users[1].id, organizationId: organizations[0].id, roleId: commissionChairRole.id },
+      { userId: users[2].id, organizationId: organizations[1].id, roleId: adminRole.id },
+      { userId: users[3].id, organizationId: organizations[2].id, roleId: adminRole.id },
     ]
 
     const userOrganizations = await db.insert(tables.userOrganizations).values(userOrganizationsData).returning()
@@ -102,16 +293,21 @@ export default defineTask({
     console.log('📊 Seeding surveys...')
     const surveysData = [
       {
-        title: 'Employee Satisfaction Survey',
+        title: 'Technical Skills Assessment',
+        category: 'technical_assessment',
         jsonData: {
-          title: 'Employee Satisfaction Survey',
+          title: 'Technical Skills Assessment',
           pages: [{
             name: 'page1',
             elements: [{
               type: 'rating',
-              name: 'satisfaction',
-              title: 'How satisfied are you with your work?',
+              name: 'coding_skills',
+              title: 'How would you rate your coding skills?',
               rateMax: 5,
+            }, {
+              type: 'text',
+              name: 'experience',
+              title: 'Describe your technical experience',
             }],
           }],
         },
@@ -119,15 +315,52 @@ export default defineTask({
         createdById: users[0].id,
       },
       {
-        title: 'Customer Feedback Form',
+        title: 'Personality Assessment',
+        category: 'personality_test',
         jsonData: {
-          title: 'Customer Feedback Form',
+          title: 'Personality Assessment',
+          pages: [{
+            name: 'page1',
+            elements: [{
+              type: 'radiogroup',
+              name: 'work_style',
+              title: 'What is your preferred work style?',
+              choices: ['Independent', 'Collaborative', 'Flexible'],
+            }],
+          }],
+        },
+        organizationId: organizations[0].id,
+        createdById: users[1].id,
+      },
+      {
+        title: 'Written Exam - Software Engineering',
+        category: 'written_exam',
+        jsonData: {
+          title: 'Written Exam - Software Engineering',
           pages: [{
             name: 'page1',
             elements: [{
               type: 'text',
-              name: 'feedback',
-              title: 'Please share your feedback',
+              name: 'algorithm_question',
+              title: 'Explain how you would implement a binary search tree',
+            }],
+          }],
+        },
+        organizationId: organizations[0].id,
+        createdById: users[0].id,
+      },
+      {
+        title: 'Language Proficiency Test',
+        category: 'language_test',
+        jsonData: {
+          title: 'Language Proficiency Test',
+          pages: [{
+            name: 'page1',
+            elements: [{
+              type: 'rating',
+              name: 'english_proficiency',
+              title: 'Rate your English proficiency',
+              rateMax: 5,
             }],
           }],
         },
@@ -175,7 +408,22 @@ export default defineTask({
     const procedures = await db.insert(tables.procedures).values(proceduresData).returning()
     console.log(`✅ Created ${procedures.length} procedures`)
 
-    // 7. Seed Exam Criteria
+    // 7. Seed Procedure Surveys
+    console.log('📝 Seeding procedure surveys...')
+    const procedureSurveysData = [
+      // For Senior Software Engineer Recruitment
+      { procedureId: procedures[0].id, surveyId: surveys[0].id, order: 0 }, // Technical Assessment
+      { procedureId: procedures[0].id, surveyId: surveys[2].id, order: 0 }, // Written Exam
+      { procedureId: procedures[0].id, surveyId: surveys[1].id, order: 0 }, // Personality Test
+      // For Product Manager Recruitment
+      { procedureId: procedures[1].id, surveyId: surveys[1].id, order: 0 }, // Personality Test
+      { procedureId: procedures[1].id, surveyId: surveys[3].id, order: 0 }, // Language Test
+    ]
+
+    const procedureSurveys = await db.insert(tables.procedureSurveys).values(procedureSurveysData).returning()
+    console.log(`✅ Created ${procedureSurveys.length} procedure survey assignments`)
+
+    // 8. Seed Exam Criteria
     console.log('📋 Seeding exam criteria...')
     const examCriteriaData = [
       // For Senior Software Engineer
@@ -203,60 +451,67 @@ export default defineTask({
     const contendersData = [
       // For Senior Software Engineer
       {
+        cisIdentifier: 'CIS-2025-001',
         name: 'Alice Anderson',
         email: 'alice.anderson@email.com',
         phone: '+1234567890',
-        status: 'interviewing',
+        status: 'evaluating',
         notes: 'Strong technical background, excellent problem-solving skills',
         procedureId: procedures[0].id,
       },
       {
+        cisIdentifier: 'CIS-2025-002',
         name: 'Bob Brown',
         email: 'bob.brown@email.com',
         phone: '+1234567891',
-        status: 'pending',
+        status: 'testing',
         notes: 'Waiting for technical interview',
         procedureId: procedures[0].id,
       },
       {
+        cisIdentifier: 'CIS-2025-003',
         name: 'Charlie Davis',
         email: 'charlie.davis@email.com',
         phone: '+1234567892',
-        status: 'approved',
+        status: 'passed',
         notes: 'Excellent candidate, recommended for hire',
         procedureId: procedures[0].id,
       },
       {
+        cisIdentifier: 'CIS-2025-004',
         name: 'Diana Evans',
         email: 'diana.evans@email.com',
         phone: '+1234567893',
-        status: 'rejected',
+        status: 'failed',
         notes: 'Not enough experience with required technologies',
         procedureId: procedures[0].id,
       },
       // For Product Manager
       {
+        cisIdentifier: 'CIS-2025-005',
         name: 'Edward Foster',
         email: 'edward.foster@email.com',
         phone: '+1234567894',
-        status: 'interviewing',
+        status: 'evaluating',
         notes: 'Great product vision, strong leadership skills',
         procedureId: procedures[1].id,
       },
       {
+        cisIdentifier: 'CIS-2025-006',
         name: 'Fiona Green',
         email: 'fiona.green@email.com',
         phone: '+1234567895',
-        status: 'pending',
+        status: 'registered',
         notes: 'Resume review in progress',
         procedureId: procedures[1].id,
       },
       // For Junior Developer Internship
       {
+        cisIdentifier: 'CIS-2025-007',
         name: 'George Harris',
         email: 'george.harris@email.com',
         phone: '+1234567896',
-        status: 'pending',
+        status: 'registered',
         notes: 'CS student from Stanford, strong academic record',
         procedureId: procedures[2].id,
       },
@@ -339,12 +594,15 @@ export default defineTask({
 
     console.log('\n✨ Database seeding completed successfully!')
     console.log('\n📊 Summary:')
-    console.log(`   - ${roles.length} roles`)
+    console.log(`   - ${roles.length} VK roles`)
+    console.log(`   - ${writtenExamCategories.length} written exam categories`)
+    console.log(`   - ${oralExamCategories.length} oral exam categories`)
     console.log(`   - ${organizations.length} organizations`)
     console.log(`   - ${users.length} users`)
     console.log(`   - ${userOrganizations.length} user-organization relationships`)
     console.log(`   - ${surveys.length} surveys`)
     console.log(`   - ${procedures.length} procedures`)
+    console.log(`   - ${procedureSurveys.length} procedure survey assignments`)
     console.log(`   - ${examCriteria.length} exam criteria`)
     console.log(`   - ${contenders.length} contenders`)
     console.log(`   - ${contenderFiles.length} contender files`)
@@ -357,11 +615,14 @@ export default defineTask({
       result: 'success',
       summary: {
         roles: roles.length,
+        writtenExamCategories: writtenExamCategories.length,
+        oralExamCategories: oralExamCategories.length,
         organizations: organizations.length,
         users: users.length,
         userOrganizations: userOrganizations.length,
         surveys: surveys.length,
         procedures: procedures.length,
+        procedureSurveys: procedureSurveys.length,
         examCriteria: examCriteria.length,
         contenders: contenders.length,
         contenderFiles: contenderFiles.length,

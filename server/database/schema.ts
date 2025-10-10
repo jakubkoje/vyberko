@@ -11,12 +11,37 @@ export const organizations = pgTable('organizations', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
 
-// Roles table (predefined: owner, admin, member, viewer)
+// Roles table for VK system (admin, subject_expert, commission_member, commission_chair, candidate)
 export const roles = pgTable('roles', {
   id: serial('id').primaryKey(),
-  name: text('name').notNull().unique(),
+  name: text('name').notNull().unique(), // admin, subject_expert, commission_member, commission_chair, candidate
   description: text('description'),
-  permissions: jsonb('permissions').notNull().default('{}'),
+  permissions: jsonb('permissions').notNull().default('{}'), // { manageUsers, createTests, evaluateCandidates, takTests, viewReports, etc. }
+  requires2FA: integer('requires_2fa').notNull().default(0), // 1 for admin, 0 for others
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// Written Exam Categories (6 types as per VK requirements)
+export const writtenExamCategories = pgTable('written_exam_categories', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(), // professional_knowledge, general_knowledge, state_language, foreign_language, it_skills, abilities_personality
+  nameSk: text('name_sk').notNull(), // Slovak name
+  nameEn: text('name_en').notNull(), // English name
+  description: text('description'),
+  isActive: integer('is_active').notNull().default(1),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// Oral Exam Categories (10 personality traits as per VK requirements)
+export const oralExamCategories = pgTable('oral_exam_categories', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').notNull().unique(), // self_confidence, conscientiousness_reliability, independence, etc.
+  nameSk: text('name_sk').notNull(), // Slovak name
+  nameEn: text('name_en').notNull(), // English name
+  description: text('description'),
+  minRating: integer('min_rating').notNull().default(1),
+  maxRating: integer('max_rating').notNull().default(5),
+  isActive: integer('is_active').notNull().default(1),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -25,9 +50,14 @@ export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
-  password: text('password').notNull(),
+  password: text('password'), // Nullable for Keycloak users
   avatar: text('avatar').notNull(),
   currentOrganizationId: integer('current_organization_id').references(() => organizations.id),
+
+  // Keycloak integration fields
+  keycloakId: text('keycloak_id').unique(), // Keycloak user ID (sub claim)
+  authProvider: text('auth_provider').notNull().default('local'), // 'keycloak' or 'local'
+
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
@@ -55,30 +85,45 @@ export const surveys = pgTable('surveys', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
 
-// Procedures table (scoped to organization)
+// Procedures table (VK - Výberové konanie, scoped to organization)
 export const procedures = pgTable('procedures', {
   id: serial('id').primaryKey(),
+  identifier: text('identifier').notNull().unique(), // e.g., VK/2025/1234
   title: text('title').notNull(),
   description: text('description'),
-  status: text('status').notNull().default('active'), // active, closed, draft
+  status: text('status').notNull().default('draft'), // draft, active, testing, evaluating, completed, cancelled
+
+  // VK Header fields
+  procedureType: text('procedure_type'), // e.g., 'širšie vnútorné výberové konanie'
+  organizationalUnit: text('organizational_unit'), // e.g., 'odbor implementácie OKP'
+  civilServiceSector: text('civil_service_sector'), // e.g., '1.03 – Medzinárodná spolupráca'
+  positionTitle: text('position_title'), // e.g., 'hlavný štátny radca'
+  serviceType: text('service_type'), // e.g., 'stála štátna služba'
+  procedureDate: timestamp('procedure_date', { withTimezone: true }),
+  numberOfPositions: integer('number_of_positions').notNull().default(1),
+
   organizationId: integer('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   createdById: integer('created_by_id').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
 
-// Contenders table (scoped to procedure)
+// Contenders table (Uchádzači - candidates in procedure)
 export const contenders = pgTable('contenders', {
   id: serial('id').primaryKey(),
+  cisIdentifier: text('cis_identifier').notNull(), // Identifier from CIS ŠS system (used as login)
   name: text('name').notNull(),
   email: text('email').notNull(),
   phone: text('phone'),
-  status: text('status').notNull().default('pending'), // pending, approved, rejected, interviewing
+  status: text('status').notNull().default('registered'), // registered, testing, passed_written, failed_written, evaluating, passed, failed, selected
   notes: text('notes'),
+  userId: integer('user_id').references(() => users.id), // Link to user account (temporary credentials)
   procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
-})
+}, table => ({
+  contenderCisIdx: uniqueIndex('contender_cis_procedure_idx').on(table.cisIdentifier, table.procedureId),
+}))
 
 // Contender Files table (documents submitted by contenders)
 export const contenderFiles = pgTable('contender_files', {
@@ -175,6 +220,10 @@ export const surveysRelations = relations(surveys, ({ one }) => ({
     fields: [surveys.createdById],
     references: [users.id],
   }),
+  procedureSurvey: one(procedureSurveys, {
+    fields: [surveys.id],
+    references: [procedureSurveys.surveyId],
+  }),
 }))
 
 export const proceduresRelations = relations(procedures, ({ one, many }) => ({
@@ -239,4 +288,12 @@ export const procedureSurveysRelations = relations(procedureSurveys, ({ one }) =
     fields: [procedureSurveys.surveyId],
     references: [surveys.id],
   }),
+}))
+
+export const writtenExamCategoriesRelations = relations(writtenExamCategories, ({ many }) => ({
+  // Can be extended with relations to tests/surveys if needed
+}))
+
+export const oralExamCategoriesRelations = relations(oralExamCategories, ({ many }) => ({
+  // Can be extended with relations to exam criteria if needed
 }))

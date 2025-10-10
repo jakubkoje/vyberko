@@ -2,18 +2,26 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import * as v from 'valibot'
 
-const props = defineProps<{
-  organizationId?: number
-}>()
-
 const emit = defineEmits<{
   close: [{
     submitted: boolean
-    data?: { title: string, description?: string, status: string, organizationId: number }
+    data?: { title: string, category: string }
   }]
 }>()
 
 const form = useTemplateRef('form')
+
+// Fetch exam categories codelist
+const { data: examCategoriesCodelist } = await useFetch('/api/exam-categories/codelist', {
+  default: () => [],
+})
+
+const categoryOptions = computed(() => {
+  return examCategoriesCodelist.value.map((category: any) => ({
+    label: category.label,
+    value: category.value,
+  }))
+})
 
 // Valibot validation schema
 const schema = v.object({
@@ -23,36 +31,25 @@ const schema = v.object({
     v.minLength(3, 'Title must be at least 3 characters'),
     v.maxLength(200, 'Title must not exceed 200 characters'),
   ),
-  description: v.optional(v.string()),
-  status: v.pipe(
+  category: v.pipe(
     v.string(),
-    v.nonEmpty('Status is required'),
+    v.nonEmpty('Category is required'),
   ),
 })
 
 type Schema = v.InferOutput<typeof schema>
 
-const statusOptions = [
-  { label: 'Active', value: 'active' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Closed', value: 'closed' },
-]
-
 // Form state
 const state = reactive<Partial<Schema>>({
   title: '',
-  description: '',
-  status: 'active',
+  category: '',
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Emit the form data to parent component
   emit('close', {
     submitted: true,
-    data: {
-      ...event.data,
-      organizationId: props.organizationId || 1,
-    },
+    data: event.data,
   })
 }
 
@@ -65,7 +62,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    title="Create Procedure"
+    title="Create Survey"
   >
     <template #body>
       <UForm
@@ -82,33 +79,22 @@ function onCancel() {
         >
           <UInput
             v-model="state.title"
-            placeholder="Senior Software Engineer Position"
+            placeholder="Employee Satisfaction Survey"
             class="w-full"
             autofocus
           />
         </UFormField>
 
         <UFormField
-          label="Description"
-          name="description"
-        >
-          <UTextarea
-            v-model="state.description"
-            placeholder="Describe the recruitment procedure..."
-            class="w-full"
-            :rows="4"
-          />
-        </UFormField>
-
-        <UFormField
-          label="Status"
-          name="status"
+          label="Category"
+          name="category"
+          description="This determines when the survey will be used in the recruitment process."
           required
         >
           <USelect
-            v-model="state.status"
-            :items="statusOptions"
-            placeholder="Select status"
+            v-model="state.category"
+            :items="categoryOptions"
+            placeholder="Select category"
             class="w-full"
           />
         </UFormField>
@@ -123,7 +109,7 @@ function onCancel() {
         @click="onCancel"
       />
       <UButton
-        label="Create Procedure"
+        label="Create Survey"
         @click="form?.submit()"
       />
     </template>
