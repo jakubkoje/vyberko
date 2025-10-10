@@ -16,6 +16,12 @@ export interface Permission {
     update?: boolean
     delete?: boolean
   }
+  procedures?: {
+    create?: boolean
+    read?: boolean
+    update?: boolean
+    delete?: boolean
+  }
 }
 
 export async function getUserOrganization(userId: number, organizationId: number) {
