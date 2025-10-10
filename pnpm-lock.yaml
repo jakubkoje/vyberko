@@ -39,6 +39,9 @@ importers:
       eslint:
         specifier: ^9.0.0
         version: 9.37.0(jiti@2.6.1)
+      keycloak-js:
+        specifier: ^26.2.1
+        version: 26.2.1
       luxon:
         specifier: ^3.7.2
         version: 3.7.2
@@ -3916,6 +3919,9 @@ packages:
 
   kdbush@3.0.0:
     resolution: {integrity: sha512-hRkd6/XW4HTsA9vjVpY9tuXJYLSlelnkTmVFu4M9/7MIYQtFcHpbugAU7UbOfjOiVSVYl2fqgBuJ32JUmRo5Ew==}
+
+  keycloak-js@26.2.1:
+    resolution: {integrity: sha512-bZt6fQj/TLBAmivXSxSlqAJxBx/knNZDQGJIW4ensGYGN4N6tUKV8Zj3Y7/LOV8eIpvWsvqV70fbACihK8Ze0Q==}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -10004,6 +10010,8 @@ snapshots:
   json5@2.2.3: {}
 
   kdbush@3.0.0: {}
+
+  keycloak-js@26.2.1: {}
 
   keyv@4.5.4:
     dependencies:
