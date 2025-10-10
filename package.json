@@ -33,9 +33,9 @@
   },
   "engines": {
     "node": "22.14.0",
-    "pnpm": "10.18.1"
+    "pnpm": "9.15.9"
   },
-  "packageManager": "pnpm@10.18.1",
+  "packageManager": "pnpm@9.15.9",
   "devDependencies": {
     "@types/luxon": "^3.7.1",
     "@types/pg": "^8.15.5",
