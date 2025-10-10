@@ -49,12 +49,15 @@ export default defineEventHandler(async (event) => {
     await requireOrganizationAccess(event, procedure[0].organizationId, 'contenders', 'read')
   }
 
-  // Generate presigned URL (using the MinIO key stored in sharepointId)
-  const presignedUrl = await generatePresignedUrl(file[0].sharepointId || '')
+  // Fetch file from MinIO using authenticated request
+  const fileResponse = await getFile(file[0].sharepointId || '')
 
-  return {
-    url: presignedUrl,
-    fileName: file[0].fileName,
-    fileType: file[0].fileType,
-  }
+  // Set response headers for file download
+  setResponseHeaders(event, {
+    'Content-Type': file[0].fileType || 'application/octet-stream',
+    'Content-Disposition': `attachment; filename="${file[0].fileName}"`,
+  })
+
+  // Stream the file to the client
+  return fileResponse.body
 })

@@ -11,10 +11,14 @@ const procedureId = computed(() => Number(route.params.id))
 const { data: procedure } = await useFetch(`/api/procedures/${procedureId.value}`)
 
 const links = [[{
-  label: 'Dashboard',
-  icon: 'i-lucide-layout-dashboard',
+  label: 'Overview',
+  icon: 'i-lucide-info',
   to: `/admin/procedures/${procedureId.value}`,
   exact: true,
+}, {
+  label: 'Contenders',
+  icon: 'i-lucide-users',
+  to: `/admin/procedures/${procedureId.value}/contenders`,
 }, {
   label: 'Settings',
   icon: 'i-lucide-settings',

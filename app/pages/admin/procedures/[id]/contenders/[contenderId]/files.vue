@@ -50,7 +50,8 @@ function getRowItems(row: Row<ContenderFile>) {
       label: 'Download',
       icon: 'i-lucide-download',
       onSelect() {
-        window.open(row.original.fileUrl, '_blank')
+        // Use download endpoint which proxies authenticated MinIO request
+        window.open(`/api/contender-files/${row.original.id}/download`, '_blank')
       },
     },
     {

@@ -1,101 +1,82 @@
 <script setup lang="ts">
-import { LazyProceduresCreateContenderModal } from '#components'
-
 const route = useRoute()
 const procedureId = computed(() => Number(route.params.id))
 
-const { data: contenders, refresh } = await useFetch(`/api/procedures/${procedureId.value}/contenders`, {
-  default: () => [],
-})
+const { data: procedure } = await useFetch(`/api/procedures/${procedureId.value}`)
 
-const q = ref('')
-
-const filteredContenders = computed(() => {
-  return contenders.value.filter((contender) => {
-    return contender.name.search(new RegExp(q.value, 'i')) !== -1 || contender.email.search(new RegExp(q.value, 'i')) !== -1
-  })
-})
-
-const toast = useToast()
-const overlay = useOverlay()
-const router = useRouter()
-
-const modal = overlay.create(LazyProceduresCreateContenderModal)
-
-async function openCreateModal() {
-  const instance = modal.open({
-    procedureId: procedureId.value,
-  })
-
-  const result: {
-    submitted: boolean
-    data?: { name: string, email: string, phone?: string, status: string, notes?: string }
-  } = await instance.result
-
-  if (result.submitted && result.data) {
-    try {
-      await $fetch(`/api/procedures/${procedureId.value}/contenders`, {
-        method: 'POST',
-        body: result.data,
-      })
-
-      toast.add({
-        title: 'Contender added successfully',
-        color: 'success',
-      })
-
-      refresh()
-    }
-    catch (error) {
-      toast.add({
-        title: 'Failed to add contender',
-        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
-        color: 'error',
-      })
-    }
-  }
+const statusColors: Record<string, string> = {
+  active: 'success',
+  closed: 'error',
+  draft: 'warning',
 }
 
-function openContenderDetail(contenderId: number) {
-  router.push(`/admin/procedures/${procedureId.value}/contenders/${contenderId}`)
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 </script>
 
 <template>
   <div>
     <UPageCard
-      title="Contenders"
-      description="Manage candidates for this recruitment procedure."
+      title="Procedure Overview"
+      description="Details and information about this recruitment procedure."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
-    >
-      <UButton
-        label="Add Contender"
-        color="neutral"
-        class="w-fit lg:ms-auto"
-        @click="openCreateModal"
-      />
-    </UPageCard>
+    />
 
-    <UPageCard
-      variant="subtle"
-      :ui="{ container: 'p-0 sm:p-0 gap-y-0', wrapper: 'items-stretch', header: 'p-4 mb-0 border-b border-default' }"
-    >
-      <template #header>
-        <UInput
-          v-model="q"
-          icon="i-lucide-search"
-          placeholder="Search contenders"
-          autofocus
-          class="w-full"
-        />
-      </template>
+    <UPageCard variant="subtle">
+      <div class="space-y-6">
+        <!-- Title -->
+        <div>
+          <label class="text-sm font-medium text-muted">Title</label>
+          <p class="mt-1 text-base text-highlighted">
+            {{ procedure?.title || 'Untitled Procedure' }}
+          </p>
+        </div>
 
-      <ProceduresContendersList
-        :contenders="filteredContenders"
-        @select="openContenderDetail"
-      />
+        <!-- Status -->
+        <div>
+          <label class="text-sm font-medium text-muted">Status</label>
+          <div class="mt-1">
+            <UBadge
+              :label="procedure?.status || 'Unknown'"
+              :color="statusColors[procedure?.status || 'draft']"
+              variant="subtle"
+              class="capitalize"
+            />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div v-if="procedure?.description">
+          <label class="text-sm font-medium text-muted">Description</label>
+          <p class="mt-1 text-base text-highlighted whitespace-pre-wrap">
+            {{ procedure.description }}
+          </p>
+        </div>
+
+        <!-- Metadata -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-default">
+          <div>
+            <label class="text-sm font-medium text-muted">Created</label>
+            <p class="mt-1 text-base text-highlighted">
+              {{ procedure?.createdAt ? formatDate(procedure.createdAt) : 'Unknown' }}
+            </p>
+          </div>
+
+          <div>
+            <label class="text-sm font-medium text-muted">Last Updated</label>
+            <p class="mt-1 text-base text-highlighted">
+              {{ procedure?.updatedAt ? formatDate(procedure.updatedAt) : 'Unknown' }}
+            </p>
+          </div>
+        </div>
+      </div>
     </UPageCard>
   </div>
 </template>
