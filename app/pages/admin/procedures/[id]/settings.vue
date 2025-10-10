@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { UInputMenu } from '#components'
+
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -6,6 +8,21 @@ const toast = useToast()
 const procedureId = computed(() => Number(route.params.id))
 
 const { data: procedure, refresh } = await useFetch(`/api/procedures/${procedureId.value}`)
+const { data: examCriteria, refresh: refreshCriteria } = await useFetch(`/api/procedures/${procedureId.value}/exam-criteria`, {
+  default: () => [],
+})
+const { data: criteriaCodelist } = await useFetch('/api/exam-criteria/codelist', {
+  default: () => [],
+})
+const { data: surveys } = await useFetch('/api/surveys', {
+  default: () => [],
+})
+const { data: procedureSurveys, refresh: refreshProcedureSurveys } = await useFetch(`/api/procedures/${procedureId.value}/surveys`, {
+  default: () => [],
+})
+const { data: examCategoriesCodelist } = await useFetch('/api/exam-categories/codelist', {
+  default: () => [],
+})
 
 const isEditing = ref(false)
 const editState = reactive({
@@ -82,6 +99,176 @@ async function deleteProcedure() {
     })
   }
 }
+
+// Exam Criteria Management
+const selectedCriteriaValues = ref<string[]>([])
+
+// Get available options (exclude already selected)
+const availableOptions = computed(() => {
+  const selectedNames = new Set(examCriteria.value.map((c: any) => c.name))
+  return criteriaCodelist.value.filter((option: any) => !selectedNames.has(option.value))
+})
+
+// Get label for a criteria value
+function getCriteriaLabel(value: string): string {
+  const item = criteriaCodelist.value.find((c: any) => c.value === value)
+  return item?.label || value
+}
+
+async function addSelectedCriteria() {
+  if (selectedCriteriaValues.value.length === 0) {
+    return
+  }
+
+  try {
+    await $fetch(`/api/procedures/${procedureId.value}/exam-criteria`, {
+      method: 'POST',
+      body: {
+        names: selectedCriteriaValues.value,
+      },
+    })
+
+    toast.add({
+      title: 'Criteria added',
+      description: `Added ${selectedCriteriaValues.value.length} criteria`,
+      color: 'success',
+    })
+
+    selectedCriteriaValues.value = []
+    await refreshCriteria()
+  }
+  catch (error) {
+    toast.add({
+      title: 'Failed to add criteria',
+      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      color: 'error',
+    })
+  }
+}
+
+async function removeCriteria(criteriaId: number, criteriaName: string) {
+  if (!confirm(`Remove "${getCriteriaLabel(criteriaName)}" from exam criteria? This will also delete all associated exam scores.`)) {
+    return
+  }
+
+  try {
+    await $fetch(`/api/exam-criteria/${criteriaId}`, {
+      method: 'DELETE',
+    })
+
+    toast.add({
+      title: 'Criteria removed',
+      color: 'success',
+    })
+
+    await refreshCriteria()
+  }
+  catch (error) {
+    toast.add({
+      title: 'Failed to remove criteria',
+      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      color: 'error',
+    })
+  }
+}
+
+// Survey Management
+const selectedSurveyIds = ref<number[]>([])
+
+// Get available surveys (not already assigned to this procedure)
+const availableSurveys = computed(() => {
+  const assignedSurveyIds = new Set(procedureSurveys.value.map((ps: any) => ps.surveyId))
+  return surveys.value
+    .filter((survey: any) => !assignedSurveyIds.has(survey.id))
+    .map((survey: any) => ({
+      label: `${survey.title} (${getCategoryLabel(survey.category)})`,
+      value: survey.id,
+    }))
+})
+
+// Get label for a category value
+function getCategoryLabel(value: string): string {
+  const item = examCategoriesCodelist.value.find((c: any) => c.value === value)
+  return item?.label || value
+}
+
+// Group surveys by category
+const surveysByCategory = computed(() => {
+  const grouped: Record<string, any[]> = {}
+
+  // Sort categories by order from codelist
+  const sortedCategories = [...examCategoriesCodelist.value].sort((a: any, b: any) => a.order - b.order)
+
+  sortedCategories.forEach((category: any) => {
+    grouped[category.value] = procedureSurveys.value
+      .filter((ps: any) => ps.category === category.value)
+      .sort((a: any, b: any) => a.order - b.order)
+  })
+
+  return grouped
+})
+
+async function addSelectedSurveys() {
+  if (selectedSurveyIds.value.length === 0) {
+    return
+  }
+
+  try {
+    // Add surveys one by one
+    await Promise.all(
+      selectedSurveyIds.value.map(surveyId =>
+        $fetch(`/api/procedures/${procedureId.value}/surveys`, {
+          method: 'POST',
+          body: {
+            surveyId,
+          },
+        }),
+      ),
+    )
+
+    toast.add({
+      title: 'Surveys added',
+      description: `Added ${selectedSurveyIds.value.length} survey(s)`,
+      color: 'success',
+    })
+
+    selectedSurveyIds.value = []
+    await refreshProcedureSurveys()
+  }
+  catch (error) {
+    toast.add({
+      title: 'Failed to add surveys',
+      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      color: 'error',
+    })
+  }
+}
+
+async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle: string) {
+  if (!confirm(`Remove "${surveyTitle}" from this procedure?`)) {
+    return
+  }
+
+  try {
+    await $fetch(`/api/procedure-surveys/${procedureSurveyId}`, {
+      method: 'DELETE',
+    })
+
+    toast.add({
+      title: 'Survey removed',
+      color: 'success',
+    })
+
+    await refreshProcedureSurveys()
+  }
+  catch (error) {
+    toast.add({
+      title: 'Failed to remove survey',
+      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      color: 'error',
+    })
+  }
+}
 </script>
 
 <template>
@@ -153,7 +340,7 @@ async function deleteProcedure() {
           >
             <USelect
               v-model="editState.status"
-              :options="statusOptions"
+              :items="statusOptions"
             />
           </UFormField>
         </div>
@@ -185,6 +372,179 @@ async function deleteProcedure() {
           />
         </div>
       </template>
+    </UPageCard>
+
+    <!-- Oral Exam Criteria -->
+    <UPageCard
+      title="Oral Exam Criteria"
+      description="Select rating categories for oral exams. All criteria use a 1-5 rating scale."
+    >
+      <div class="space-y-4">
+        <!-- Currently Selected Criteria -->
+        <div
+          v-if="examCriteria && examCriteria.length > 0"
+          class="flex flex-wrap gap-2"
+        >
+          <UBadge
+            v-for="criteria in examCriteria"
+            :key="criteria.id"
+            :label="getCriteriaLabel(criteria.name)"
+            variant="subtle"
+            color="primary"
+            class="pr-1"
+          >
+            <template #trailing>
+              <UButton
+                icon="i-lucide-x"
+                color="primary"
+                variant="ghost"
+                size="2xs"
+                @click="removeCriteria(criteria.id, criteria.name)"
+              />
+            </template>
+          </UBadge>
+        </div>
+
+        <div
+          v-else
+          class="text-center py-6"
+        >
+          <UIcon
+            name="i-lucide-clipboard-list"
+            class="size-10 text-muted mb-2 mx-auto"
+          />
+          <p class="text-sm text-muted">
+            No exam criteria selected yet
+          </p>
+        </div>
+
+        <!-- Add Criteria Selector -->
+        <div
+          v-if="availableOptions.length > 0"
+          class="space-y-3"
+        >
+          <UFormField label="Add Criteria">
+            <UInputMenu
+              v-model="selectedCriteriaValues"
+              :items="availableOptions"
+              multiple
+              searchable
+              placeholder="Select criteria to add..."
+              value-key="value"
+              label-key="label"
+            />
+          </UFormField>
+
+          <UButton
+            label="Add Selected"
+            icon="i-lucide-plus"
+            color="neutral"
+            :disabled="selectedCriteriaValues.length === 0"
+            @click="addSelectedCriteria"
+          />
+        </div>
+
+        <div
+          v-else-if="examCriteria && examCriteria.length > 0"
+          class="text-sm text-muted"
+        >
+          All available criteria have been added.
+        </div>
+      </div>
+    </UPageCard>
+
+    <!-- Written Exams & Surveys -->
+    <UPageCard
+      title="Written Exams & Surveys"
+      description="Assign surveys to this procedure. Surveys are organized by category and displayed in strict order."
+    >
+      <div class="space-y-6">
+        <!-- Assigned Surveys by Category -->
+        <div
+          v-if="procedureSurveys && procedureSurveys.length > 0"
+          class="space-y-4"
+        >
+          <div
+            v-for="category in examCategoriesCodelist"
+            :key="category.value"
+          >
+            <div
+              v-if="surveysByCategory[category.value] && surveysByCategory[category.value].length > 0"
+              class="space-y-2"
+            >
+              <h4 class="text-sm font-medium text-highlighted">
+                {{ category.label }}
+              </h4>
+              <div class="flex flex-wrap gap-2">
+                <UBadge
+                  v-for="procedureSurvey in surveysByCategory[category.value]"
+                  :key="procedureSurvey.id"
+                  :label="procedureSurvey.surveyTitle"
+                  variant="subtle"
+                  color="primary"
+                  class="pr-1"
+                >
+                  <template #trailing>
+                    <UButton
+                      icon="i-lucide-x"
+                      color="primary"
+                      variant="ghost"
+                      size="2xs"
+                      @click="removeSurveyFromProcedure(procedureSurvey.id, procedureSurvey.surveyTitle)"
+                    />
+                  </template>
+                </UBadge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="text-center py-6"
+        >
+          <UIcon
+            name="i-lucide-file-question"
+            class="size-10 text-muted mb-2 mx-auto"
+          />
+          <p class="text-sm text-muted">
+            No surveys assigned yet
+          </p>
+        </div>
+
+        <!-- Add Survey Form -->
+        <div
+          v-if="availableSurveys.length > 0"
+          class="space-y-3 pt-4 border-t border-default"
+        >
+          <UFormField label="Add Surveys">
+            <UInputMenu
+              v-model="selectedSurveyIds"
+              :items="availableSurveys"
+              multiple
+              searchable
+              placeholder="Select surveys to add..."
+              value-key="value"
+              label-key="label"
+            />
+          </UFormField>
+
+          <UButton
+            label="Add Selected"
+            icon="i-lucide-plus"
+            color="neutral"
+            :disabled="selectedSurveyIds.length === 0"
+            @click="addSelectedSurveys"
+          />
+        </div>
+
+        <div
+          v-else-if="procedureSurveys && procedureSurveys.length > 0"
+          class="text-sm text-muted pt-4 border-t border-default"
+        >
+          All available surveys have been assigned.
+        </div>
+      </div>
     </UPageCard>
 
     <!-- Danger Zone -->

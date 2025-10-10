@@ -8,18 +8,19 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if (!body.organizationId) {
+  if (!body.category) {
     throw createError({
       statusCode: 400,
-      message: 'Organization ID is required',
+      message: 'Survey category is required',
     })
   }
 
-  // Check if user has access to create surveys
-  await requireOrganizationAccess(event, body.organizationId, 'surveys', 'create')
+  // Get current organization and user from context
+  const organizationId = await getCurrentOrganizationId(event)
+  const user = await getCurrentUser(event)
 
-  // TODO: Get userId from session/auth
-  const userId = 1 // Temporary hardcode
+  // Check if user has access to create surveys
+  await requireOrganizationAccess(event, organizationId, 'surveys', 'create')
 
   const db = useDrizzle()
 
@@ -28,8 +29,9 @@ export default defineEventHandler(async (event) => {
     .values({
       jsonData: body.jsonData,
       title: body.title || 'Untitled Survey',
-      organizationId: body.organizationId,
-      createdById: userId,
+      category: body.category,
+      organizationId,
+      createdById: user.id,
     })
     .returning()
 

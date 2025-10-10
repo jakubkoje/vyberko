@@ -1,6 +1,6 @@
 {
-  "id": "32f61584-74d9-4f3c-b677-f13ff0c8bc38",
-  "prevId": "d20360a4-ddab-449f-90cb-850dbf3206c6",
+  "id": "7245172a-918d-48b1-a13f-84d50bc6ee58",
+  "prevId": "32f61584-74d9-4f3c-b677-f13ff0c8bc38",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -445,12 +445,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "category": {
-          "name": "category",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "order": {
           "name": "order",
           "type": "integer",
@@ -688,6 +682,12 @@
         "json_data": {
           "name": "json_data",
           "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
           "primaryKey": false,
           "notNull": true
         },

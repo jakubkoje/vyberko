@@ -8,18 +8,12 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if (!body.organizationId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Organization ID is required',
-    })
-  }
+  // Get current organization and user from context
+  const organizationId = await getCurrentOrganizationId(event)
+  const user = await getCurrentUser(event)
 
   // Check if user has access to create procedures
-  await requireOrganizationAccess(event, body.organizationId, 'procedures', 'create')
-
-  // TODO: Get userId from session/auth
-  const userId = 1 // Temporary hardcode
+  await requireOrganizationAccess(event, organizationId, 'procedures', 'create')
 
   const db = useDrizzle()
 
@@ -29,8 +23,8 @@ export default defineEventHandler(async (event) => {
       title: body.title,
       description: body.description || null,
       status: body.status || 'active',
-      organizationId: body.organizationId,
-      createdById: userId,
+      organizationId,
+      createdById: user.id,
     })
     .returning()
 

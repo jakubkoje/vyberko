@@ -41,6 +41,7 @@ export default defineEventHandler(async (event) => {
     .set({
       jsonData: body.jsonData,
       title: body.title || 'Untitled Survey',
+      category: body.category || existing[0].category,
     })
     .where(eq(tables.surveys.id, Number(id)))
     .returning()

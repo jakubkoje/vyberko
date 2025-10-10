@@ -48,6 +48,7 @@ export const surveys = pgTable('surveys', {
   id: serial('id').primaryKey(),
   title: text('title').notNull().default('Untitled Survey'),
   jsonData: jsonb('json_data').notNull(),
+  category: text('category').notNull(), // e.g., 'written_exam', 'personality_test', 'technical_assessment'
   organizationId: integer('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   createdById: integer('created_by_id').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -92,6 +93,44 @@ export const contenderFiles = pgTable('contender_files', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
+
+// Exam Criteria table (rating categories for oral exams, scoped to procedure)
+export const examCriteria = pgTable('exam_criteria', {
+  id: serial('id').primaryKey(),
+  procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(), // e.g., 'flexibility', 'communication'
+  minRating: integer('min_rating').notNull().default(1),
+  maxRating: integer('max_rating').notNull().default(5),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
+})
+
+// Exam Scores table (stores ratings for each contender-criteria pair)
+export const examScores = pgTable('exam_scores', {
+  id: serial('id').primaryKey(),
+  contenderId: integer('contender_id').notNull().references(() => contenders.id, { onDelete: 'cascade' }),
+  criteriaId: integer('criteria_id').notNull().references(() => examCriteria.id, { onDelete: 'cascade' }),
+  score: integer('score').notNull(),
+  evaluatedById: integer('evaluated_by_id').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
+}, table => ({
+  contenderCriteriaIdx: uniqueIndex('contender_criteria_idx').on(table.contenderId, table.criteriaId),
+}))
+
+// Procedure Surveys table (links procedures to surveys with ordering)
+// Each survey can only be assigned to one procedure (unique constraint on surveyId)
+// Category is inherited from the survey itself
+export const procedureSurveys = pgTable('procedure_surveys', {
+  id: serial('id').primaryKey(),
+  procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
+  surveyId: integer('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
+  order: integer('order').notNull().default(0), // Order within category
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
+}, table => ({
+  surveyIdx: uniqueIndex('procedure_survey_idx').on(table.surveyId), // Each survey can only be in one procedure
+}))
 
 // Relations
 export const organizationsRelations = relations(organizations, ({ many }) => ({
@@ -148,6 +187,8 @@ export const proceduresRelations = relations(procedures, ({ one, many }) => ({
     references: [users.id],
   }),
   contenders: many(contenders),
+  examCriteria: many(examCriteria),
+  procedureSurveys: many(procedureSurveys),
 }))
 
 export const contendersRelations = relations(contenders, ({ one, many }) => ({
@@ -156,11 +197,46 @@ export const contendersRelations = relations(contenders, ({ one, many }) => ({
     references: [procedures.id],
   }),
   files: many(contenderFiles),
+  examScores: many(examScores),
 }))
 
 export const contenderFilesRelations = relations(contenderFiles, ({ one }) => ({
   contender: one(contenders, {
     fields: [contenderFiles.contenderId],
     references: [contenders.id],
+  }),
+}))
+
+export const examCriteriaRelations = relations(examCriteria, ({ one, many }) => ({
+  procedure: one(procedures, {
+    fields: [examCriteria.procedureId],
+    references: [procedures.id],
+  }),
+  examScores: many(examScores),
+}))
+
+export const examScoresRelations = relations(examScores, ({ one }) => ({
+  contender: one(contenders, {
+    fields: [examScores.contenderId],
+    references: [contenders.id],
+  }),
+  criteria: one(examCriteria, {
+    fields: [examScores.criteriaId],
+    references: [examCriteria.id],
+  }),
+  evaluatedBy: one(users, {
+    fields: [examScores.evaluatedById],
+    references: [users.id],
+  }),
+}))
+
+export const procedureSurveysRelations = relations(procedureSurveys, ({ one }) => ({
+  procedure: one(procedures, {
+    fields: [procedureSurveys.procedureId],
+    references: [procedures.id],
+  }),
+  survey: one(surveys, {
+    fields: [procedureSurveys.surveyId],
+    references: [surveys.id],
   }),
 }))

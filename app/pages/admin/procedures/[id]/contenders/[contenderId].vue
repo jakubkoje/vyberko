@@ -11,6 +11,16 @@ const tabs = [{
   value: 'index',
   to: `/admin/procedures/${procedureId.value}/contenders/${contenderId.value}`,
 }, {
+  label: 'Written Exam',
+  icon: 'i-lucide-file-edit',
+  value: 'written-exam',
+  to: `/admin/procedures/${procedureId.value}/contenders/${contenderId.value}/written-exam`,
+}, {
+  label: 'Oral Exam',
+  icon: 'i-lucide-clipboard-list',
+  value: 'oral-exam',
+  to: `/admin/procedures/${procedureId.value}/contenders/${contenderId.value}/oral-exam`,
+}, {
   label: 'Files',
   icon: 'i-lucide-file-text',
   value: 'files',
@@ -20,7 +30,10 @@ const tabs = [{
 // Computed property for active tab with getter/setter
 const selectedTab = computed({
   get() {
-    return route.path.endsWith('/files') ? 'files' : 'index'
+    if (route.path.endsWith('/written-exam')) return 'written-exam'
+    if (route.path.endsWith('/oral-exam')) return 'oral-exam'
+    if (route.path.endsWith('/files')) return 'files'
+    return 'index'
   },
   set(index: string) {
     navigateTo(tabs.find(tab => tab.value === index)?.to || 'index')

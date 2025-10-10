@@ -13,6 +13,11 @@ export default defineNuxtConfig({
     minioBucket: 'vyberko',
   },
   compatibilityDate: '2025-07-15',
+  nitro: {
+    experimental: {
+      tasks: true,
+    },
+  },
   eslint: {
     config: {
       stylistic: true,

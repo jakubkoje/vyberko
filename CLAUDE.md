@@ -144,3 +144,7 @@ This project requires Node.js version **22.20.0** as specified in `package.json`
 ## Usage of MCP
 
 Always use Context7 MCP when generating code, mostly for NuxtUI, Drizzle and SurveyJS.
+
+## Database Schema
+
+When creating new tables, always create a seeder in drizzle.

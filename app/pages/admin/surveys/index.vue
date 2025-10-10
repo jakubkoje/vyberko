@@ -116,9 +116,10 @@ const table = useTemplateRef('table')
 
 const { data, status, refresh } = await useFetch('/api/surveys', {
   lazy: true,
-  query: {
-    organizationId: 1,
-  },
+})
+
+const { data: examCategoriesCodelist } = await useFetch('/api/exam-categories/codelist', {
+  default: () => [],
 })
 
 type Survey = NonNullable<typeof data.value>[number]
@@ -126,6 +127,11 @@ type Survey = NonNullable<typeof data.value>[number]
 watch(data, () => {
   console.log(data.value)
 })
+
+function getCategoryLabel(value: string): string {
+  const item = examCategoriesCodelist.value.find((c: any) => c.value === value)
+  return item?.label || value
+}
 
 function getRowItems(row: Row<Survey>) {
   return [
@@ -214,6 +220,13 @@ const columns: TableColumn<Survey>[] = [
         }),
         h('span', { class: 'font-medium' }, row.original.title),
       ])
+    },
+  },
+  {
+    accessorKey: 'category',
+    header: 'Category',
+    cell: ({ row }) => {
+      return h('span', { class: 'text-sm' }, getCategoryLabel(row.original.category))
     },
   },
   {
