@@ -2,23 +2,24 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import * as v from 'valibot'
 
-defineProps<{
-  organizationId?: number
+const props = defineProps<{
+  contender: {
+    name: string
+    email: string
+    phone?: string
+    status: string
+    notes?: string
+  }
 }>()
 
 const emit = defineEmits<{
   close: [{
     submitted: boolean
-    data?: { name: string, email: string, roleId: number }
+    data?: { name: string, email: string, phone?: string, status: string, notes?: string }
   }]
 }>()
 
 const form = useTemplateRef('form')
-
-// Fetch available roles
-const { data: roles } = await useFetch<{ id: number, name: string, description: string | null }[]>('/api/roles', {
-  default: () => [],
-})
 
 // Valibot validation schema
 const schema = v.object({
@@ -33,19 +34,30 @@ const schema = v.object({
     v.nonEmpty('Email is required'),
     v.email('Please enter a valid email address'),
   ),
-  roleId: v.pipe(
-    v.number('Please select a role'),
-    v.minValue(1, 'Please select a role'),
+  phone: v.optional(v.string()),
+  status: v.pipe(
+    v.string(),
+    v.nonEmpty('Status is required'),
   ),
+  notes: v.optional(v.string()),
 })
 
 type Schema = v.InferOutput<typeof schema>
 
-// Form state
+const statusOptions = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Interviewing', value: 'interviewing' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
+]
+
+// Form state initialized with existing contender data
 const state = reactive<Partial<Schema>>({
-  name: '',
-  email: '',
-  roleId: undefined,
+  name: props.contender.name,
+  email: props.contender.email,
+  phone: props.contender.phone || '',
+  status: props.contender.status,
+  notes: props.contender.notes || '',
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -65,7 +77,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    title="Invite Member"
+    title="Edit Contender"
   >
     <template #body>
       <UForm
@@ -101,15 +113,39 @@ function onCancel() {
         </UFormField>
 
         <UFormField
-          label="Role"
-          name="roleId"
+          label="Phone"
+          name="phone"
+        >
+          <UInput
+            v-model="state.phone"
+            type="tel"
+            placeholder="+1 (555) 123-4567"
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Status"
+          name="status"
           required
         >
           <USelect
-            v-model="state.roleId"
-            :options="roles.map(r => ({ label: r.name, value: r.id }))"
-            placeholder="Select a role"
+            v-model="state.status"
+            :options="statusOptions"
+            placeholder="Select status"
             class="w-full"
+          />
+        </UFormField>
+
+        <UFormField
+          label="Notes"
+          name="notes"
+        >
+          <UTextarea
+            v-model="state.notes"
+            placeholder="Additional notes..."
+            class="w-full"
+            :rows="4"
           />
         </UFormField>
       </UForm>
@@ -123,7 +159,7 @@ function onCancel() {
         @click="onCancel"
       />
       <UButton
-        label="Invite"
+        label="Save Changes"
         @click="form?.submit()"
       />
     </template>

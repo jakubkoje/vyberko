@@ -2,57 +2,57 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import * as v from 'valibot'
 
-defineProps<{
+const props = defineProps<{
   organizationId?: number
 }>()
 
 const emit = defineEmits<{
   close: [{
     submitted: boolean
-    data?: { name: string, email: string, roleId: number }
+    data?: { title: string, description?: string, status: string, organizationId: number }
   }]
 }>()
 
 const form = useTemplateRef('form')
 
-// Fetch available roles
-const { data: roles } = await useFetch<{ id: number, name: string, description: string | null }[]>('/api/roles', {
-  default: () => [],
-})
-
 // Valibot validation schema
 const schema = v.object({
-  name: v.pipe(
+  title: v.pipe(
     v.string(),
-    v.nonEmpty('Name is required'),
-    v.minLength(2, 'Name must be at least 2 characters'),
-    v.maxLength(100, 'Name must not exceed 100 characters'),
+    v.nonEmpty('Title is required'),
+    v.minLength(3, 'Title must be at least 3 characters'),
+    v.maxLength(200, 'Title must not exceed 200 characters'),
   ),
-  email: v.pipe(
+  description: v.optional(v.string()),
+  status: v.pipe(
     v.string(),
-    v.nonEmpty('Email is required'),
-    v.email('Please enter a valid email address'),
-  ),
-  roleId: v.pipe(
-    v.number('Please select a role'),
-    v.minValue(1, 'Please select a role'),
+    v.nonEmpty('Status is required'),
   ),
 })
 
 type Schema = v.InferOutput<typeof schema>
 
+const statusOptions = [
+  { label: 'Active', value: 'active' },
+  { label: 'Draft', value: 'draft' },
+  { label: 'Closed', value: 'closed' },
+]
+
 // Form state
 const state = reactive<Partial<Schema>>({
-  name: '',
-  email: '',
-  roleId: undefined,
+  title: '',
+  description: '',
+  status: 'active',
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   // Emit the form data to parent component
   emit('close', {
     submitted: true,
-    data: event.data,
+    data: {
+      ...event.data,
+      organizationId: props.organizationId || 1,
+    },
   })
 }
 
@@ -65,7 +65,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    title="Invite Member"
+    title="Create Procedure"
   >
     <template #body>
       <UForm
@@ -76,39 +76,39 @@ function onCancel() {
         @submit="onSubmit"
       >
         <UFormField
-          label="Name"
-          name="name"
+          label="Title"
+          name="title"
           required
         >
           <UInput
-            v-model="state.name"
-            placeholder="John Doe"
+            v-model="state.title"
+            placeholder="Senior Software Engineer Position"
             class="w-full"
+            autofocus
           />
         </UFormField>
 
         <UFormField
-          label="Email"
-          name="email"
-          required
+          label="Description"
+          name="description"
         >
-          <UInput
-            v-model="state.email"
-            type="email"
-            placeholder="john@example.com"
+          <UTextarea
+            v-model="state.description"
+            placeholder="Describe the recruitment procedure..."
             class="w-full"
+            :rows="4"
           />
         </UFormField>
 
         <UFormField
-          label="Role"
-          name="roleId"
+          label="Status"
+          name="status"
           required
         >
           <USelect
-            v-model="state.roleId"
-            :options="roles.map(r => ({ label: r.name, value: r.id }))"
-            placeholder="Select a role"
+            v-model="state.status"
+            :options="statusOptions"
+            placeholder="Select status"
             class="w-full"
           />
         </UFormField>
@@ -123,7 +123,7 @@ function onCancel() {
         @click="onCancel"
       />
       <UButton
-        label="Invite"
+        label="Create Procedure"
         @click="form?.submit()"
       />
     </template>

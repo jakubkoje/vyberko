@@ -33,7 +33,6 @@ const links = [[{
 <template>
   <UDashboardPanel
     id="settings"
-    :ui="{ body: 'lg:py-12' }"
   >
     <template #header>
       <UDashboardNavbar title="Settings">

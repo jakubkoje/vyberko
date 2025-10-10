@@ -1,8 +1,8 @@
 <template>
-  <UDashboardPanel id="surveys">
+  <UDashboardPanel id="procedures">
     <template #header>
       <UDashboardNavbar
-        title="Surveys"
+        title="Recruitment Procedures"
         :ui="{ right: 'gap-3' }"
       >
         <template #leading>
@@ -35,8 +35,8 @@
           <UButton
             icon="i-lucide-plus"
             size="md"
-            label="Create Survey"
-            @click="navigateTo('/admin/surveys/new')"
+            label="New Procedure"
+            @click="createProcedure"
           />
         </template>
       </UDashboardNavbar>
@@ -48,7 +48,7 @@
           :model-value="(table?.tableApi?.getColumn('title')?.getFilterValue() as string)"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Search surveys..."
+          placeholder="Search procedures..."
           @update:model-value="table?.tableApi?.getColumn('title')?.setFilterValue($event)"
         />
       </div>
@@ -65,9 +65,9 @@
         :columns="columns"
         :loading="status === 'pending'"
         :empty-state="{
-          icon: 'i-lucide-file-question',
-          label: 'No surveys found',
-          description: 'Create your first survey to get started',
+          icon: 'i-lucide-briefcase',
+          label: 'No procedures found',
+          description: 'Create your first recruitment procedure to get started',
         }"
         :ui="{
           base: 'table-fixed border-separate border-spacing-0',
@@ -80,7 +80,7 @@
 
       <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
         <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} survey(s) found.
+          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} procedure(s) found.
         </div>
 
         <div class="flex items-center gap-1.5">
@@ -101,10 +101,12 @@ import type { TableColumn } from '@nuxt/ui'
 import { DateTime } from 'luxon'
 import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
+import { LazyProceduresCreateProcedureModal } from '#components'
 
 const UIcon = resolveComponent('UIcon')
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
+const UBadge = resolveComponent('UBadge')
 
 definePageMeta({
   layout: 'admin',
@@ -112,64 +114,77 @@ definePageMeta({
 
 const { isNotificationsSlideoverOpen } = useDashboard()
 const toast = useToast()
+const overlay = useOverlay()
 const table = useTemplateRef('table')
+const router = useRouter()
 
-const { data, status, refresh } = await useFetch('/api/surveys', {
+interface Procedure {
+  id: number
+  title: string
+  description: string | null
+  status: string
+  organizationId: number
+  createdById: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+const { data, status, refresh } = await useFetch('/api/procedures', {
   lazy: true,
   query: {
     organizationId: 1,
   },
 })
 
-type Survey = NonNullable<typeof data.value>[number]
+const statusColors: Record<string, string> = {
+  active: 'success',
+  closed: 'error',
+  draft: 'warning',
+}
 
-watch(data, () => {
-  console.log(data.value)
-})
-
-function getRowItems(row: Row<Survey>) {
+function getRowItems(row: Row<Procedure>) {
   return [
     {
       type: 'label',
       label: 'Actions',
     },
     {
-      label: 'Edit survey',
-      icon: 'i-lucide-pencil',
+      label: 'View details',
+      icon: 'i-lucide-eye',
       onSelect() {
-        navigateTo(`/admin/surveys/${row.original.id}`)
+        navigateTo(`/admin/procedures/${row.original.id}`)
       },
     },
     {
-      label: 'Preview survey',
-      icon: 'i-lucide-eye',
+      label: 'Edit procedure',
+      icon: 'i-lucide-pencil',
       onSelect() {
-        // TODO: Implement preview
-        console.log('Preview survey:', row.original)
+        // TODO: Implement edit modal
+        console.log('Edit procedure:', row.original)
       },
     },
     {
       type: 'separator',
     },
     {
-      label: 'Delete survey',
+      label: 'Delete procedure',
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
         if (confirm(`Are you sure you want to delete "${row.original.title}"?`)) {
           try {
-            await $fetch(`/api/surveys/${row.original.id}`, { method: 'DELETE' })
+            await $fetch(`/api/procedures/${row.original.id}`, { method: 'DELETE' })
             await refresh()
             toast.add({
-              title: 'Survey deleted',
-              description: 'The survey has been deleted.',
+              title: 'Procedure deleted',
+              description: 'The procedure has been deleted.',
             })
           }
           catch (error) {
-            console.error('Failed to delete survey:', error)
+            console.error('Failed to delete procedure:', error)
             toast.add({
               title: 'Error',
-              description: 'Failed to delete survey.',
+              description: 'Failed to delete procedure.',
               color: 'error',
             })
           }
@@ -179,11 +194,50 @@ function getRowItems(row: Row<Survey>) {
   ]
 }
 
-const formatDate = (dateString: string | Date) => {
-  return DateTime.fromISO(dateString.toString()).toLocaleString(DateTime.DATETIME_MED)
+const formatDate = (dateString: string) => {
+  return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED)
 }
 
-const columns: TableColumn<Survey>[] = [
+const modal = overlay.create(LazyProceduresCreateProcedureModal)
+
+async function createProcedure() {
+  const instance = modal.open({
+    organizationId: 1,
+  })
+
+  const result: {
+    submitted: boolean
+    data?: { title: string, description?: string, status: string, organizationId: number }
+  } = await instance.result
+
+  if (result.submitted && result.data) {
+    try {
+      const newProcedure = await $fetch('/api/procedures', {
+        method: 'POST',
+        body: result.data,
+      })
+
+      toast.add({
+        title: 'Procedure created successfully',
+        color: 'success',
+      })
+
+      refresh()
+      if (newProcedure?.id) {
+        router.push(`/admin/procedures/${newProcedure.id}`)
+      }
+    }
+    catch (error) {
+      toast.add({
+        title: 'Failed to create procedure',
+        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        color: 'error',
+      })
+    }
+  }
+}
+
+const columns: TableColumn<Procedure>[] = [
   {
     accessorKey: 'id',
     header: 'ID',
@@ -209,11 +263,22 @@ const columns: TableColumn<Survey>[] = [
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-2' }, [
         h(UIcon, {
-          name: 'i-lucide-file-text',
+          name: 'i-lucide-briefcase',
           class: 'size-4',
         }),
         h('span', { class: 'font-medium' }, row.original.title),
       ])
+    },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      return h(UBadge, {
+        label: row.original.status,
+        color: statusColors[row.original.status] || 'neutral',
+        variant: 'subtle',
+      })
     },
   },
   {

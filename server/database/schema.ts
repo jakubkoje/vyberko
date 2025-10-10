@@ -54,10 +54,50 @@ export const surveys = pgTable('surveys', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
 
+// Procedures table (scoped to organization)
+export const procedures = pgTable('procedures', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  status: text('status').notNull().default('active'), // active, closed, draft
+  organizationId: integer('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  createdById: integer('created_by_id').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
+})
+
+// Contenders table (scoped to procedure)
+export const contenders = pgTable('contenders', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone'),
+  status: text('status').notNull().default('pending'), // pending, approved, rejected, interviewing
+  notes: text('notes'),
+  procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
+})
+
+// Contender Files table (documents submitted by contenders)
+export const contenderFiles = pgTable('contender_files', {
+  id: serial('id').primaryKey(),
+  contenderId: integer('contender_id').notNull().references(() => contenders.id, { onDelete: 'cascade' }),
+  fileName: text('file_name').notNull(),
+  fileType: text('file_type').notNull(), // e.g., 'application/pdf', 'image/jpeg'
+  fileSize: integer('file_size').notNull(), // in bytes
+  fileUrl: text('file_url').notNull(), // Will be SharePoint URL in future
+  sharepointId: text('sharepoint_id'), // For future SharePoint integration
+  uploadedAt: timestamp('uploaded_at', { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
+})
+
 // Relations
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   userOrganizations: many(userOrganizations),
   surveys: many(surveys),
+  procedures: many(procedures),
 }))
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -95,5 +135,32 @@ export const surveysRelations = relations(surveys, ({ one }) => ({
   createdBy: one(users, {
     fields: [surveys.createdById],
     references: [users.id],
+  }),
+}))
+
+export const proceduresRelations = relations(procedures, ({ one, many }) => ({
+  organization: one(organizations, {
+    fields: [procedures.organizationId],
+    references: [organizations.id],
+  }),
+  createdBy: one(users, {
+    fields: [procedures.createdById],
+    references: [users.id],
+  }),
+  contenders: many(contenders),
+}))
+
+export const contendersRelations = relations(contenders, ({ one, many }) => ({
+  procedure: one(procedures, {
+    fields: [contenders.procedureId],
+    references: [procedures.id],
+  }),
+  files: many(contenderFiles),
+}))
+
+export const contenderFilesRelations = relations(contenderFiles, ({ one }) => ({
+  contender: one(contenders, {
+    fields: [contenderFiles.contenderId],
+    references: [contenders.id],
   }),
 }))

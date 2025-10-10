@@ -6,12 +6,7 @@
     <template #header>
       <UDashboardNavbar :title="pageTitle">
         <template #leading>
-          <UButton
-            icon="i-lucide-arrow-left"
-            color="neutral"
-            variant="ghost"
-            @click="navigateTo('/admin')"
-          />
+          <UDashboardSidebarCollapse />
         </template>
 
         <template #right>
@@ -75,7 +70,7 @@ onMounted(async () => {
 })
 
 // Save survey to backend
-creator.saveSurveyFunc = async (saveNo: number, callback: Function) => {
+creator.saveSurveyFunc = async (saveNo: number, callback: (saveNo: number, success: boolean) => void) => {
   try {
     const surveyData = {
       jsonData: creator.JSON,
@@ -96,9 +91,11 @@ creator.saveSurveyFunc = async (saveNo: number, callback: Function) => {
         method: 'POST',
         body: surveyData,
       })
-      currentSurveyId.value = newSurvey.id
-      // Update URL to reflect the new survey ID
-      navigateTo(`/admin/surveys/${newSurvey.id}`, { replace: true })
+      if (newSurvey?.id) {
+        currentSurveyId.value = newSurvey.id
+        // Update URL to reflect the new survey ID
+        navigateTo(`/admin/surveys/${newSurvey.id}`, { replace: true })
+      }
     }
 
     callback(saveNo, true)

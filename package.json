@@ -20,6 +20,7 @@
     "@unovis/ts": "^1.6.1",
     "@unovis/vue": "^1.6.1",
     "@vueuse/nuxt": "13.9.0",
+    "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.6",
     "eslint": "^9.0.0",
     "luxon": "^3.7.2",

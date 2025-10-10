@@ -36,6 +36,13 @@ const links = [[{
     open.value = false
   },
 }, {
+  label: 'Procedures',
+  icon: 'i-lucide-briefcase',
+  to: '/admin/procedures',
+  onSelect: () => {
+    open.value = false
+  },
+}, {
   label: 'Settings',
   to: '/admin/settings',
   icon: 'i-lucide-settings',

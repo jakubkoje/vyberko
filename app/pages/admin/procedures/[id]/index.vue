@@ -1,29 +1,30 @@
 <script setup lang="ts">
-import type { Member } from '~/types'
-import { LazySettingsInviteMemberModal } from '#components'
+import { LazyProceduresCreateContenderModal } from '#components'
 
-const organizationId = 1
+const route = useRoute()
+const procedureId = computed(() => Number(route.params.id))
 
-const { data: members, refresh } = await useFetch<Member[]>(`/api/organizations/${organizationId}/members`, {
+const { data: contenders, refresh } = await useFetch(`/api/procedures/${procedureId.value}/contenders`, {
   default: () => [],
 })
 
 const q = ref('')
 
-const filteredMembers = computed(() => {
-  return members.value.filter((member) => {
-    return member.name.search(new RegExp(q.value, 'i')) !== -1 || member.username.search(new RegExp(q.value, 'i')) !== -1
+const filteredContenders = computed(() => {
+  return contenders.value.filter((contender) => {
+    return contender.name.search(new RegExp(q.value, 'i')) !== -1 || contender.email.search(new RegExp(q.value, 'i')) !== -1
   })
 })
 
 const toast = useToast()
 const overlay = useOverlay()
+const router = useRouter()
 
-const modal = overlay.create(LazySettingsInviteMemberModal)
+const modal = overlay.create(LazyProceduresCreateContenderModal)
 
-async function openInviteModal() {
+async function openCreateModal() {
   const instance = modal.open({
-    organizationId,
+    procedureId: procedureId.value,
   })
 
   const result: {
@@ -32,46 +33,48 @@ async function openInviteModal() {
   } = await instance.result
 
   if (result.submitted && result.data) {
-    // Make the API call to invite the member
     try {
-      await $fetch(`/api/organizations/${organizationId}/members`, {
+      await $fetch(`/api/procedures/${procedureId.value}/contenders`, {
         method: 'POST',
         body: result.data,
       })
 
       toast.add({
-        title: 'Member invited successfully',
+        title: 'Contender added successfully',
         color: 'success',
       })
 
-      // Refresh the members list
       refresh()
     }
     catch (error) {
       toast.add({
-        title: 'Failed to invite member',
+        title: 'Failed to add contender',
         description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
         color: 'error',
       })
     }
   }
 }
+
+function openContenderDetail(contenderId: number) {
+  router.push(`/admin/procedures/${procedureId.value}/contenders/${contenderId}`)
+}
 </script>
 
 <template>
   <div>
     <UPageCard
-      title="Members"
-      description="Invite new members by email address."
+      title="Contenders"
+      description="Manage candidates for this recruitment procedure."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
     >
       <UButton
-        label="Invite people"
+        label="Add Contender"
         color="neutral"
         class="w-fit lg:ms-auto"
-        @click="openInviteModal"
+        @click="openCreateModal"
       />
     </UPageCard>
 
@@ -83,13 +86,16 @@ async function openInviteModal() {
         <UInput
           v-model="q"
           icon="i-lucide-search"
-          placeholder="Search members"
+          placeholder="Search contenders"
           autofocus
           class="w-full"
         />
       </template>
 
-      <SettingsMembersList :members="filteredMembers" />
+      <ProceduresContendersList
+        :contenders="filteredContenders"
+        @select="openContenderDetail"
+      />
     </UPageCard>
   </div>
 </template>
