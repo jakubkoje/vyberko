@@ -21,6 +21,7 @@
     "@unovis/vue": "^1.6.1",
     "@vueuse/nuxt": "13.9.0",
     "aws4fetch": "^1.0.20",
+    "cheerio": "^1.1.2",
     "drizzle-orm": "^0.44.6",
     "eslint": "^9.0.0",
     "keycloak-js": "^26.2.1",
