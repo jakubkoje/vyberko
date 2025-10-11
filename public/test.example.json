@@ -1,0 +1,73 @@
+{
+    "title": "Odborny test",
+    "description": "Test test je na overenie odbornych zrusti praxe, pre pozicii, ktoru sa hlasite.",
+    "pages": [
+      {
+        "name": "page1",
+        "elements": [
+          {
+            "type": "radiogroup",
+            "name": "question1",
+            "title": "Ako sa mas?",
+            "correctAnswer": "Item 1",
+            "isRequired": true,
+            "choices": [
+              {
+                "value": "Item 1",
+                "text": "dobre"
+              },
+              {
+                "value": "Item 2",
+                "text": "nie dobre"
+              },
+              {
+                "value": "Item 3",
+                "text": "neviem"
+              },
+              {
+                "value": "Item 4",
+                "text": "zle"
+              }
+            ]
+          },
+          {
+            "type": "checkbox",
+            "name": "question2",
+            "title": "Oznacte vsetky spisovne slova.",
+            "correctAnswer": [
+              "Item 1",
+              "Item 2",
+              "Item 3"
+            ],
+            "choices": [
+              {
+                "value": "Item 1",
+                "text": "jakub"
+              },
+              {
+                "value": "Item 2",
+                "text": "ano"
+              },
+              {
+                "value": "Item 3",
+                "text": "itinerar"
+              },
+              {
+                "value": "Item 4",
+                "text": "alfredovity"
+              },
+              {
+                "value": "Item 5",
+                "text": "jakubovic"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "showTimer": true,
+    "timeLimit": 900,
+    "startDate": "2025-10-11T01:20:00Z",
+    "endDate": "2025-10-11T01:35:00Z",
+    "headerView": "advanced"
+  }
