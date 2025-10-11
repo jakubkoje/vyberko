@@ -22,10 +22,14 @@ export interface Mail {
 }
 
 export interface Member {
-  name: string
-  username: string
-  role: 'member' | 'owner'
-  avatar: AvatarProps
+  id: number
+  userId: number
+  userName: string
+  userEmail: string
+  userAvatar: string
+  roleId: number
+  roleName: string
+  joinedAt: string
 }
 
 export interface Stat {
@@ -42,14 +46,6 @@ export interface Sale {
   status: SaleStatus
   email: string
   amount: number
-}
-
-export interface Notification {
-  id: number
-  unread?: boolean
-  sender: User
-  body: string
-  date: string
 }
 
 export type Period = 'daily' | 'weekly' | 'monthly'

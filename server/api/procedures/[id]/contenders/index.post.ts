@@ -1,3 +1,14 @@
+// Generate a secure temporary password
+function generateTemporaryPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  const length = 12
+  let password = ''
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return password
+}
+
 export default defineEventHandler(async (event) => {
   const procedureId = getRouterParam(event, 'id')
   const body = await readBody(event)
@@ -9,10 +20,10 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if (!body.name || !body.email) {
+  if (!body.name || !body.email || !body.cisIdentifier) {
     throw createError({
       statusCode: 400,
-      message: 'Name and email are required',
+      message: 'Name, email, and CIS identifier are required',
     })
   }
 
@@ -32,20 +43,65 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Check if user has access to create contenders
-  await requireOrganizationAccess(event, procedure[0].organizationId, 'contenders', 'create')
+  // Check if user has access to create contenders (admin can create candidates)
+  await requireOrganizationAccess(event, procedure[0].organizationId, 'users', 'createCandidates')
 
-  const newContender = await db
-    .insert(tables.contenders)
+  // Check if cisIdentifier already exists for this procedure
+  const existingContender = await db
+    .select()
+    .from(tables.contenders)
+    .where(and(
+      eq(tables.contenders.cisIdentifier, body.cisIdentifier),
+      eq(tables.contenders.procedureId, Number(procedureId)),
+    ))
+    .limit(1)
+
+  if (existingContender.length > 0) {
+    throw createError({
+      statusCode: 400,
+      message: 'A contender with this CIS identifier already exists in this procedure',
+    })
+  }
+
+  // Generate temporary password
+  const temporaryPassword = generateTemporaryPassword()
+
+  // Hash the password
+  const hashedPassword = await hashPassword(temporaryPassword)
+
+  // Create user account for candidate
+  const newUser = await db
+    .insert(tables.users)
     .values({
       name: body.name,
       email: body.email,
+      password: hashedPassword,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(body.name)}`,
+      authProvider: 'local',
+    })
+    .returning()
+
+  // Create contender and link to user
+  const newContender = await db
+    .insert(tables.contenders)
+    .values({
+      cisIdentifier: body.cisIdentifier,
+      name: body.name,
+      email: body.email,
       phone: body.phone || null,
-      status: body.status || 'pending',
+      status: body.status || 'registered',
       notes: body.notes || null,
+      userId: newUser[0].id,
       procedureId: Number(procedureId),
     })
     .returning()
 
-  return newContender[0]
+  // Return contender with credentials
+  return {
+    ...newContender[0],
+    credentials: {
+      username: body.cisIdentifier,
+      temporaryPassword,
+    },
+  }
 })

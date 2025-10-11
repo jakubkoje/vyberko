@@ -9,7 +9,7 @@ defineProps<{
 const emit = defineEmits<{
   close: [{
     submitted: boolean
-    data?: { name: string, email: string, phone?: string, status: string, notes?: string }
+    data?: { cisIdentifier: string, name: string, email: string, phone?: string, status: string, notes?: string }
   }]
 }>()
 
@@ -17,6 +17,12 @@ const form = useTemplateRef('form')
 
 // Valibot validation schema
 const schema = v.object({
+  cisIdentifier: v.pipe(
+    v.string(),
+    v.nonEmpty('CIS identifier is required'),
+    v.minLength(3, 'CIS identifier must be at least 3 characters'),
+    v.maxLength(50, 'CIS identifier must not exceed 50 characters'),
+  ),
   name: v.pipe(
     v.string(),
     v.nonEmpty('Name is required'),
@@ -39,18 +45,23 @@ const schema = v.object({
 type Schema = v.InferOutput<typeof schema>
 
 const statusOptions = [
-  { label: 'Pending', value: 'pending' },
-  { label: 'Interviewing', value: 'interviewing' },
-  { label: 'Approved', value: 'approved' },
-  { label: 'Rejected', value: 'rejected' },
+  { label: 'Registered', value: 'registered' },
+  { label: 'Testing', value: 'testing' },
+  { label: 'Passed Written', value: 'passed_written' },
+  { label: 'Failed Written', value: 'failed_written' },
+  { label: 'Evaluating', value: 'evaluating' },
+  { label: 'Passed', value: 'passed' },
+  { label: 'Failed', value: 'failed' },
+  { label: 'Selected', value: 'selected' },
 ]
 
 // Form state
 const state = reactive<Partial<Schema>>({
+  cisIdentifier: '',
   name: '',
   email: '',
   phone: '',
-  status: 'pending',
+  status: 'registered',
   notes: '',
 })
 
@@ -81,6 +92,20 @@ function onCancel() {
         class="space-y-4"
         @submit="onSubmit"
       >
+        <UFormField
+          label="CIS Identifier"
+          name="cisIdentifier"
+          description="Unique identifier from CIS ŠS system (will be used as login username)"
+          required
+        >
+          <UInput
+            v-model="state.cisIdentifier"
+            placeholder="e.g., CIS123456"
+            class="w-full"
+            autofocus
+          />
+        </UFormField>
+
         <UFormField
           label="Name"
           name="name"

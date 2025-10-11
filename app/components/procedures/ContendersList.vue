@@ -3,11 +3,13 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 
 interface Contender {
   id: number
+  cisIdentifier: string
   name: string
   email: string
   phone: string | null
   status: string
   notes: string | null
+  userId: number | null
   procedureId: number
   createdAt: string
   updatedAt: string
@@ -41,10 +43,35 @@ function getItems(contender: Contender): DropdownMenuItem[] {
 }
 
 const statusColors: Record<string, string> = {
+  registered: 'neutral',
+  testing: 'primary',
+  passed_written: 'success',
+  failed_written: 'error',
+  evaluating: 'warning',
+  passed: 'success',
+  failed: 'error',
+  selected: 'success',
+  // Legacy status values
   pending: 'warning',
   interviewing: 'primary',
   approved: 'success',
   rejected: 'error',
+}
+
+const statusLabels: Record<string, string> = {
+  registered: 'Registered',
+  testing: 'Testing',
+  passed_written: 'Passed Written',
+  failed_written: 'Failed Written',
+  evaluating: 'Evaluating',
+  passed: 'Passed',
+  failed: 'Failed',
+  selected: 'Selected',
+  // Legacy status values
+  pending: 'Pending',
+  interviewing: 'Interviewing',
+  approved: 'Approved',
+  rejected: 'Rejected',
 }
 </script>
 
@@ -78,10 +105,9 @@ const statusColors: Record<string, string> = {
 
       <div class="flex items-center gap-3">
         <UBadge
-          :label="contender.status"
+          :label="statusLabels[contender.status] || contender.status"
           :color="statusColors[contender.status] || 'neutral'"
           variant="subtle"
-          class="capitalize"
         />
 
         <UDropdownMenu

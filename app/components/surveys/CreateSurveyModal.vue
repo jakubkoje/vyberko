@@ -10,6 +10,7 @@ const emit = defineEmits<{
 }>()
 
 const form = useTemplateRef('form')
+const { can, isSubjectExpert } = usePermissions()
 
 // Fetch exam categories codelist
 const { data: examCategoriesCodelist } = await useFetch('/api/exam-categories/codelist', {
@@ -17,6 +18,17 @@ const { data: examCategoriesCodelist } = await useFetch('/api/exam-categories/co
 })
 
 const categoryOptions = computed(() => {
+  // Subject experts (gestor) can ONLY create professional knowledge tests
+  if (isSubjectExpert.value || (can('surveys', 'createProfessional') && !can('surveys', 'createAll'))) {
+    return examCategoriesCodelist.value
+      .filter((category: any) => category.value === 'professional_knowledge')
+      .map((category: any) => ({
+        label: category.label,
+        value: category.value,
+      }))
+  }
+
+  // Admins can create all types
   return examCategoriesCodelist.value.map((category: any) => ({
     label: category.label,
     value: category.value,

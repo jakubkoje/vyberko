@@ -12,11 +12,11 @@ export const organizations = pgTable('organizations', {
 })
 
 // Roles table for VK system (admin, subject_expert, commission_member, commission_chair, candidate)
+// Permissions are inferred from the role name at runtime, not stored in database
 export const roles = pgTable('roles', {
   id: serial('id').primaryKey(),
   name: text('name').notNull().unique(), // admin, subject_expert, commission_member, commission_chair, candidate
   description: text('description'),
-  permissions: jsonb('permissions').notNull().default('{}'), // { manageUsers, createTests, evaluateCandidates, takTests, viewReports, etc. }
   requires2FA: integer('requires_2fa').notNull().default(0), // 1 for admin, 0 for others
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
@@ -43,6 +43,33 @@ export const oralExamCategories = pgTable('oral_exam_categories', {
   maxRating: integer('max_rating').notNull().default(5),
   isActive: integer('is_active').notNull().default(1),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// Question Battery (predefined questions for oral exams)
+export const questionBattery = pgTable('question_battery', {
+  id: serial('id').primaryKey(),
+  categorySlug: text('category_slug').notNull(), // References oralExamCategories.slug
+  questionSk: text('question_sk').notNull(), // Question in Slovak
+  questionEn: text('question_en').notNull(), // Question in English
+  order: integer('order').notNull().default(0),
+  isActive: integer('is_active').notNull().default(1),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// Survey Responses (test attempts and answers)
+export const surveyResponses = pgTable('survey_responses', {
+  id: serial('id').primaryKey(),
+  contenderId: integer('contender_id').notNull().references(() => contenders.id, { onDelete: 'cascade' }),
+  surveyId: integer('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
+  procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
+  responseData: jsonb('response_data').notNull(), // SurveyJS result data with answers
+  score: integer('score'), // Calculated score if applicable
+  isPassed: integer('is_passed'), // 1 = passed, 0 = failed, null = not graded
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+  submittedAt: timestamp('submitted_at', { withTimezone: true }), // When the test was submitted
+  timeSpentSeconds: integer('time_spent_seconds'), // How long they took
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
 
 // Users table
@@ -79,6 +106,8 @@ export const surveys = pgTable('surveys', {
   title: text('title').notNull().default('Untitled Survey'),
   jsonData: jsonb('json_data').notNull(),
   category: text('category').notNull(), // e.g., 'written_exam', 'personality_test', 'technical_assessment'
+  status: text('status').notNull().default('draft'), // draft, pending_approval, approved, rejected
+  rejectionReason: text('rejection_reason'), // Reason for rejection (if status is rejected)
   organizationId: integer('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   createdById: integer('created_by_id').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -107,6 +136,19 @@ export const procedures = pgTable('procedures', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 })
+
+// Procedure Assignments table (links staff to procedures they can work on)
+export const procedureAssignments = pgTable('procedure_assignments', {
+  id: serial('id').primaryKey(),
+  procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  roleId: integer('role_id').notNull().references(() => roles.id), // subject_expert, commission_member, etc.
+  status: text('status').notNull().default('pending'), // pending (invited, not logged in), accepted (logged in and active)
+  assignedAt: timestamp('assigned_at', { withTimezone: true }).notNull().defaultNow(),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }), // When user first logged in after assignment
+}, table => ({
+  procedureUserIdx: uniqueIndex('procedure_user_idx').on(table.procedureId, table.userId),
+}))
 
 // Contenders table (Uchádzači - candidates in procedure)
 export const contenders = pgTable('contenders', {
@@ -171,6 +213,12 @@ export const procedureSurveys = pgTable('procedure_surveys', {
   procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
   surveyId: integer('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
   order: integer('order').notNull().default(0), // Order within category
+
+  // Test conditions/configuration
+  timeLimit: integer('time_limit'), // Time limit in minutes
+  totalPoints: integer('total_points'), // Total points for the test
+  passingScore: integer('passing_score'), // Minimum score to pass
+
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow().$onUpdate(() => DateTime.now().toJSDate()),
 }, table => ({
@@ -190,10 +238,12 @@ export const usersRelations = relations(users, ({ many, one }) => ({
     fields: [users.currentOrganizationId],
     references: [organizations.id],
   }),
+  procedureAssignments: many(procedureAssignments),
 }))
 
 export const rolesRelations = relations(roles, ({ many }) => ({
   userOrganizations: many(userOrganizations),
+  procedureAssignments: many(procedureAssignments),
 }))
 
 export const userOrganizationsRelations = relations(userOrganizations, ({ one }) => ({
@@ -238,6 +288,22 @@ export const proceduresRelations = relations(procedures, ({ one, many }) => ({
   contenders: many(contenders),
   examCriteria: many(examCriteria),
   procedureSurveys: many(procedureSurveys),
+  procedureAssignments: many(procedureAssignments),
+}))
+
+export const procedureAssignmentsRelations = relations(procedureAssignments, ({ one }) => ({
+  procedure: one(procedures, {
+    fields: [procedureAssignments.procedureId],
+    references: [procedures.id],
+  }),
+  user: one(users, {
+    fields: [procedureAssignments.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [procedureAssignments.roleId],
+    references: [roles.id],
+  }),
 }))
 
 export const contendersRelations = relations(contenders, ({ one, many }) => ({
@@ -247,6 +313,7 @@ export const contendersRelations = relations(contenders, ({ one, many }) => ({
   }),
   files: many(contenderFiles),
   examScores: many(examScores),
+  surveyResponses: many(surveyResponses),
 }))
 
 export const contenderFilesRelations = relations(contenderFiles, ({ one }) => ({
@@ -296,4 +363,24 @@ export const writtenExamCategoriesRelations = relations(writtenExamCategories, (
 
 export const oralExamCategoriesRelations = relations(oralExamCategories, ({ many }) => ({
   // Can be extended with relations to exam criteria if needed
+  questions: many(questionBattery),
+}))
+
+export const questionBatteryRelations = relations(questionBattery, ({ one }) => ({
+  // No direct relation needed, categorySlug is just a reference
+}))
+
+export const surveyResponsesRelations = relations(surveyResponses, ({ one }) => ({
+  contender: one(contenders, {
+    fields: [surveyResponses.contenderId],
+    references: [contenders.id],
+  }),
+  survey: one(surveys, {
+    fields: [surveyResponses.surveyId],
+    references: [surveys.id],
+  }),
+  procedure: one(procedures, {
+    fields: [surveyResponses.procedureId],
+    references: [procedures.id],
+  }),
 }))

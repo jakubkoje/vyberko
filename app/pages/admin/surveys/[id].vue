@@ -25,59 +25,68 @@
     <template #body>
       <div
         v-if="currentSurveyId"
-        class="space-y-4 p-4"
+        class="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50"
       >
-        <UPageCard
-          title="Survey Details"
-          description="Edit the basic information about this survey."
-          variant="subtle"
-        >
-          <UFormField label="Survey Title">
-            <UInput
-              v-model="surveyTitle"
-              placeholder="Enter survey title..."
-              @blur="updateSurveyTitle"
-            />
-          </UFormField>
-        </UPageCard>
+        <div class="max-w-7xl mx-auto px-4 py-3 space-y-3">
+          <!-- Title Input -->
+          <UInput
+            v-model="surveyTitle"
+            placeholder="Enter survey title..."
+            size="lg"
+            variant="outline"
+            @blur="updateSurveyTitle"
+          />
 
-        <UPageCard
-          title="Survey Category"
-          description="The category determines when this survey will be used in the recruitment process."
-          variant="subtle"
-        >
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-muted">Category</span>
-            <span class="text-sm font-semibold text-highlighted">{{ getCategoryLabel(selectedCategory) }}</span>
-          </div>
-          <template #footer>
-            <p class="text-xs text-muted">
-              Category cannot be changed after survey creation.
-            </p>
-          </template>
-        </UPageCard>
+          <!-- Compact Info Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+            <!-- Category & Procedure Info -->
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Category:</span>
+              <UBadge color="primary" variant="subtle" size="sm">
+                {{ getCategoryLabel(selectedCategory) }}
+              </UBadge>
+              <template v-if="assignedProcedure">
+                <span class="text-gray-300 dark:text-gray-600">•</span>
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Procedure:</span>
+                <UButton
+                  :label="assignedProcedure.title"
+                  size="xs"
+                  color="gray"
+                  variant="ghost"
+                  icon="i-lucide-external-link"
+                  trailing
+                  @click="navigateTo(`/admin/procedures/${assignedProcedure.id}/settings`)"
+                />
+              </template>
+            </div>
 
-        <UPageCard
-          title="Assigned Procedure"
-          description="This survey is assigned to the following procedure."
-          variant="subtle"
-        >
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-muted">Procedure</span>
-            <span v-if="assignedProcedure" class="text-sm font-semibold text-highlighted">{{ assignedProcedure.title }}</span>
-            <span v-else class="text-sm italic text-muted">Not assigned to any procedure</span>
+            <!-- Constraints Display -->
+            <div v-if="categoryConstraints.length > 0" class="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <template v-for="(constraint, idx) in categoryConstraints" :key="idx">
+                <div class="flex items-center gap-2 text-xs">
+                  <span v-if="constraint.positionLevel" class="font-medium text-gray-600 dark:text-gray-400">
+                    {{ constraint.positionLevel === 'employee' ? 'Zamestnanec' : 'Vedúci zamestnanec' }}:
+                  </span>
+                  <span v-if="constraint.languageLevel" class="font-medium text-gray-600 dark:text-gray-400">
+                    {{ constraint.languageLevel }}:
+                  </span>
+                  <div class="flex items-center gap-1.5">
+                    <UBadge v-if="constraint.minQuestions || constraint.maxQuestions" color="gray" variant="soft" size="xs">
+                      {{ constraint.minQuestions }}{{ constraint.minQuestions !== constraint.maxQuestions ? `-${constraint.maxQuestions}` : '' }} otázok
+                    </UBadge>
+                    <UBadge v-if="constraint.timeLimit" color="gray" variant="soft" size="xs">
+                      {{ constraint.timeLimit }} min
+                    </UBadge>
+                    <UBadge v-if="constraint.passingScore" color="gray" variant="soft" size="xs">
+                      min {{ constraint.passingScore }} bodov
+                    </UBadge>
+                  </div>
+                </div>
+                <span v-if="idx < categoryConstraints.length - 1" class="text-gray-300 dark:text-gray-600">|</span>
+              </template>
+            </div>
           </div>
-          <template v-if="assignedProcedure" #footer>
-            <UButton
-              icon="i-lucide-external-link"
-              label="View Procedure"
-              size="xs"
-              color="neutral"
-              variant="ghost"
-              @click="navigateTo(`/admin/procedures/${assignedProcedure.id}/settings`)"
-            />
-          </template>
-        </UPageCard>
+        </div>
       </div>
 
       <SurveyCreatorComponent :model="creator" />
@@ -119,6 +128,11 @@ function getCategoryLabel(value: string): string {
 }
 
 const selectedCategory = ref<string>('')
+
+const categoryConstraints = computed(() => {
+  const category = examCategoriesCodelist.value.find((c: any) => c.value === selectedCategory.value)
+  return category?.constraints || []
+})
 const assignedProcedure = ref<{ id: number, title: string } | null>(null)
 const surveyTitle = ref<string>('')
 

@@ -14,6 +14,7 @@ This document describes the hybrid authentication system implemented for the Vyb
 - Redirects to Keycloak hosted UI
 - Auto-provisions users on first login
 - Role mapping from Keycloak to VK roles
+- Permissions inferred from Keycloak role (not stored in database)
 
 **Candidates:**
 - Local authentication with temporary credentials
@@ -22,16 +23,65 @@ This document describes the hybrid authentication system implemented for the Vyb
 - No self-registration
 - Session-based authentication
 
+### Role Definitions
+
+**Admin (Tajomník VK):**
+- Creates accounts for vecný gestor, commission members, and candidates
+- Defines and manages recruitment procedures (výberové konanie) in the system
+- Creates procedures with predefined headers
+- Creates and assigns tests to procedures
+- Sets testing conditions (scope, time limits, points, correct answers)
+- Imports documents from SharePoint for candidate storage
+- Makes test templates available to subject experts
+- Can also create tests/quizzes with save, duplicate, and edit capabilities
+- Views procedure status (registered candidates, open tests, timer, interim results)
+- Predefines evaluation environment for commission (abilities, personality traits, questions, evaluation sheets)
+- Exports results to documentation and sends PDF via email
+- Requires 2FA authentication
+
+**Vecný gestor (Subject Expert):**
+- Creates professional knowledge tests (ODBORNÝ TEST ONLY) based on Admin-provided templates
+- Works primarily with quiz-format tests (3 answers, 1 correct)
+- Can save, duplicate, and edit tests
+- Cannot create other test types (general knowledge, language, etc.)
+
+**Predseda komisie (Commission Chair):**
+- Leads the evaluation commission
+- Reviews candidate materials from storage (CV, certificates, motivation letters)
+- Views all test results and errors for each test
+- Evaluates oral exams by assigning points (1-5 scale) to predefined abilities and personality traits
+- Views predefined battery of questions for oral evaluation
+- Can finalize evaluations
+
+**Člen komisie (Commission Member):**
+- Can log into system and open specific procedures
+- Opens candidate folders to review
+- Views documents in storage (CV, motivation letters, certificates)
+- Views test results and detailed errors from written exams
+- Sees predefined abilities and personality traits for evaluation
+- Views battery of oral exam questions
+- Assigns points to each ability and personality trait during oral evaluation
+- Submits evaluations
+
+**Uchádzač (Candidate):**
+- Takes assigned tests within specified time limits
+- Views own test results
+- Limited access to only their own procedure and materials
+
 ## Configuration
 
 ### Environment Variables
 
 ```env
-# Keycloak OAuth
+# Keycloak OAuth (Public Client for User Login)
 NUXT_OAUTH_KEYCLOAK_CLIENT_ID=vyberko-app
 NUXT_OAUTH_KEYCLOAK_SERVER_URL=https://keycloak.pucwoll.dev
 NUXT_OAUTH_KEYCLOAK_REALM=master
 NUXT_OAUTH_KEYCLOAK_REDIRECT_URL=http://localhost:3000/api/auth/keycloak
+
+# Keycloak Admin Client (Confidential Client for User Management)
+NUXT_OAUTH_KEYCLOAK_ADMIN_CLIENT_ID=vyberko-admin
+NUXT_OAUTH_KEYCLOAK_ADMIN_CLIENT_SECRET=your-admin-client-secret-here
 
 # Session Secret (32+ characters)
 NUXT_SESSION_PASSWORD=vyberko-secret-session-password-min-32-chars-required-for-security
@@ -39,11 +89,24 @@ NUXT_SESSION_PASSWORD=vyberko-secret-session-password-min-32-chars-required-for-
 
 ### Keycloak Configuration
 
-**Required Keycloak Setup:**
-1. Client: `vyberko-app`
-2. Client Type: Public
-3. Valid Redirect URIs: `http://localhost:3000/api/auth/keycloak/*`, `https://your-production-url.com/api/auth/keycloak/*`
-4. Web Origins: `http://localhost:3000`, `https://your-production-url.com`
+**1. Public Client for User Login (`vyberko-app`):**
+- Client ID: `vyberko-app`
+- Client Type: **Public**
+- Valid Redirect URIs: `http://localhost:3000/api/auth/keycloak/*`, `https://your-production-url.com/api/auth/keycloak/*`
+- Web Origins: `http://localhost:3000`, `https://your-production-url.com`
+
+**2. Admin Client for User Management (`vyberko-admin`):**
+- Client ID: `vyberko-admin`
+- Client Type: **Confidential**
+- Service Accounts Enabled: **ON**
+- Authorization Enabled: **ON**
+- Valid Redirect URIs: Not required (service account only)
+- **Service Account Roles (Required):**
+  1. Go to "Service Account Roles" tab
+  2. Assign Client Role: `realm-management` → `manage-users`
+  3. Assign Client Role: `realm-management` → `view-users`
+  4. Assign Client Role: `realm-management` → `manage-realm` (for role management)
+- **Copy the Client Secret** from the Credentials tab and add to `.env` as `NUXT_OAUTH_KEYCLOAK_ADMIN_CLIENT_SECRET`
 
 **Realm Roles → VK Role Mapping:**
 - `admin` → `admin`

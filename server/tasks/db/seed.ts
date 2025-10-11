@@ -9,69 +9,37 @@ export default defineTask({
     const db = useDrizzle()
 
     // 1. Seed Roles (VK-specific roles)
+    // Permissions are inferred from role at runtime, not stored in database
     console.log('📋 Seeding VK roles...')
     const rolesData = [
       {
         name: 'admin',
-        description: 'Admin/Secretary (Tajomník VK) - Full system access with 2FA',
-        permissions: {
-          manageUsers: true,
-          createProcedures: true,
-          manageProcedures: true,
-          createTests: true,
-          manageTests: true,
-          assignTests: true,
-          viewReports: true,
-          generateDocuments: true,
-          importDocuments: true,
-          manageCommission: true,
-          viewAllResults: true,
-        },
+        description: 'Tajomník VK - Creates accounts, defines procedures, creates/assigns tests, sets conditions, performs testing, finalizes documentation. Creates procedures with predefined headers, imports SharePoint documents, manages commission evaluation environment, exports results to PDF. Keycloak OAuth users.',
         requires2FA: 1,
       },
       {
+        name: 'member',
+        description: 'Invited procedure member - Base organization role for users invited to specific procedures. Access limited to assigned procedures only.',
+        requires2FA: 0,
+      },
+      {
         name: 'subject_expert',
-        description: 'Subject Expert (Vecný gestor) - Creates test content',
-        permissions: {
-          createTests: true,
-          editOwnTests: true,
-          submitTestsForApproval: true,
-          viewOwnTests: true,
-        },
+        description: 'Vecný gestor - Creates professional knowledge tests (ODBORNÝ TEST) based on predefined templates from Admin. Can save, duplicate, and edit tests. PROCEDURE ROLE.',
         requires2FA: 0,
       },
       {
         name: 'commission_chair',
-        description: 'Commission Chairman (Predseda komisie) - Leads evaluation',
-        permissions: {
-          viewCandidates: true,
-          viewTestResults: true,
-          evaluateCandidates: true,
-          viewDocuments: true,
-          submitEvaluations: true,
-          finalizeEvaluations: true,
-        },
+        description: 'Predseda komisie - Leads evaluation commission, reviews candidate materials from storage, evaluates oral exams by assigning points to abilities and personality traits, views test results and documents. PROCEDURE ROLE.',
         requires2FA: 0,
       },
       {
         name: 'commission_member',
-        description: 'Commission Member (Člen komisie) - Evaluates candidates',
-        permissions: {
-          viewCandidates: true,
-          viewTestResults: true,
-          evaluateCandidates: true,
-          viewDocuments: true,
-          submitEvaluations: true,
-        },
+        description: 'Člen komisie - Commission member who reviews candidate materials, evaluates oral exams by assigning points to abilities and personality traits, views predefined questions and test results. PROCEDURE ROLE.',
         requires2FA: 0,
       },
       {
         name: 'candidate',
-        description: 'Candidate (Uchádzač) - Takes tests',
-        permissions: {
-          takeTests: true,
-          viewOwnResults: true,
-        },
+        description: 'Uchádzač - Takes assigned tests and views own results. PROCEDURE ROLE.',
         requires2FA: 0,
       },
     ]
@@ -79,49 +47,42 @@ export default defineTask({
     const roles = await db.insert(tables.roles).values(rolesData).returning()
     console.log(`✅ Created ${roles.length} VK roles`)
 
-    // 2. Seed Written Exam Categories (6 types as per VK requirements)
+    // 2. Seed Written Exam Categories (5 types as per VK requirements)
     console.log('📝 Seeding written exam categories...')
     const writtenExamCategoriesData = [
       {
         slug: 'professional_knowledge',
         nameSk: 'Odborný test',
         nameEn: 'Professional Knowledge Test',
-        description: 'Test na overenie úrovne ovládania odborných vedomostí',
+        description: 'Test na overenie úrovne ovládania odborných vedomostí. Zamestnanec: 10-20 otázok/20min/12 bodov. Vedúci: 15-30 otázok/30min/18 bodov.',
         isActive: 1,
       },
       {
         slug: 'general_knowledge',
         nameSk: 'Všeobecný test',
         nameEn: 'General Knowledge Test',
-        description: 'Test na overenie úrovne ovládania všeobecných vedomostí',
+        description: 'Test na overenie úrovne ovládania všeobecných vedomostí. Zamestnanec: 20 otázok/20min/6 bodov. Vedúci: 30 otázok/30min/9 bodov.',
         isActive: 1,
       },
       {
         slug: 'state_language',
         nameSk: 'Test zo štátneho jazyka',
         nameEn: 'State Language Test',
-        description: 'Test na overenie úrovne ovládania štátneho jazyka',
+        description: 'Test na overenie úrovne ovládania štátneho jazyka. 5 otázok/5min/3 body.',
         isActive: 1,
       },
       {
         slug: 'foreign_language',
         nameSk: 'Test z cudzieho jazyka',
         nameEn: 'Foreign Language Test',
-        description: 'Test na overenie úrovne ovládania cudzieho jazyka',
+        description: 'Test na overenie úrovne ovládania cudzieho jazyka. A1-A2: 30 otázok/30min/9 bodov. B1: 40 otázok/40min/12 bodov. B2-C2: 40 otázok/40min/14 bodov.',
         isActive: 1,
       },
       {
         slug: 'it_skills',
         nameSk: 'Test z práce s informačnými technológiami',
         nameEn: 'IT Skills Test',
-        description: 'Test na overenie ovládania práce s informačnými technológiami',
-        isActive: 1,
-      },
-      {
-        slug: 'abilities_personality',
-        nameSk: 'Test na overenie schopností a vlastností',
-        nameEn: 'Abilities and Personality Test',
-        description: 'Test na overenie schopností a osobnostných vlastností',
+        description: 'Test na overenie ovládania práce s informačnými technológiami. 5-10 úloh/6 bodov.',
         isActive: 1,
       },
     ]
@@ -293,21 +254,24 @@ export default defineTask({
     console.log('📊 Seeding surveys...')
     const surveysData = [
       {
-        title: 'Technical Skills Assessment',
-        category: 'technical_assessment',
+        title: 'Odborný test - Softvérové inžinierstvo',
+        category: 'professional_knowledge',
         jsonData: {
-          title: 'Technical Skills Assessment',
+          title: 'Odborný test - Softvérové inžinierstvo',
           pages: [{
             name: 'page1',
             elements: [{
-              type: 'rating',
-              name: 'coding_skills',
-              title: 'How would you rate your coding skills?',
-              rateMax: 5,
+              type: 'radiogroup',
+              name: 'q1',
+              title: 'Čo je to binárny strom?',
+              choices: ['Dátová štruktúra s dvomi potomkami', 'Lineárna dátová štruktúra', 'Graf bez cyklov'],
+              correctAnswer: 'Dátová štruktúra s dvomi potomkami',
             }, {
-              type: 'text',
-              name: 'experience',
-              title: 'Describe your technical experience',
+              type: 'radiogroup',
+              name: 'q2',
+              title: 'Aká je časová zložitosť binárneho vyhľadávania?',
+              choices: ['O(n)', 'O(log n)', 'O(n²)'],
+              correctAnswer: 'O(log n)',
             }],
           }],
         },
@@ -315,17 +279,18 @@ export default defineTask({
         createdById: users[0].id,
       },
       {
-        title: 'Personality Assessment',
-        category: 'personality_test',
+        title: 'Všeobecný test',
+        category: 'general_knowledge',
         jsonData: {
-          title: 'Personality Assessment',
+          title: 'Všeobecný test',
           pages: [{
             name: 'page1',
             elements: [{
               type: 'radiogroup',
-              name: 'work_style',
-              title: 'What is your preferred work style?',
-              choices: ['Independent', 'Collaborative', 'Flexible'],
+              name: 'q1',
+              title: 'Čo je hlavné mesto Slovenska?',
+              choices: ['Bratislava', 'Praha', 'Viedeň'],
+              correctAnswer: 'Bratislava',
             }],
           }],
         },
@@ -333,16 +298,18 @@ export default defineTask({
         createdById: users[1].id,
       },
       {
-        title: 'Written Exam - Software Engineering',
-        category: 'written_exam',
+        title: 'Test zo štátneho jazyka',
+        category: 'state_language',
         jsonData: {
-          title: 'Written Exam - Software Engineering',
+          title: 'Test zo štátneho jazyka',
           pages: [{
             name: 'page1',
             elements: [{
-              type: 'text',
-              name: 'algorithm_question',
-              title: 'Explain how you would implement a binary search tree',
+              type: 'radiogroup',
+              name: 'q1',
+              title: 'Ktorý tvar je správny?',
+              choices: ['štyria muži', 'štyri muži', 'štyrom muži'],
+              correctAnswer: 'štyria muži',
             }],
           }],
         },
@@ -350,17 +317,18 @@ export default defineTask({
         createdById: users[0].id,
       },
       {
-        title: 'Language Proficiency Test',
-        category: 'language_test',
+        title: 'Test z cudzieho jazyka - Angličtina B2',
+        category: 'foreign_language',
         jsonData: {
-          title: 'Language Proficiency Test',
+          title: 'Test z cudzieho jazyka - Angličtina B2',
           pages: [{
             name: 'page1',
             elements: [{
-              type: 'rating',
-              name: 'english_proficiency',
-              title: 'Rate your English proficiency',
-              rateMax: 5,
+              type: 'radiogroup',
+              name: 'q1',
+              title: 'Choose the correct form: "I have been working here ___ 5 years"',
+              choices: ['for', 'since', 'during'],
+              correctAnswer: 'for',
             }],
           }],
         },
@@ -376,6 +344,7 @@ export default defineTask({
     console.log('📝 Seeding procedures...')
     const proceduresData = [
       {
+        identifier: 'VK/2025/001',
         title: 'Senior Software Engineer Recruitment',
         description: 'Hiring process for senior backend engineers with 5+ years experience',
         status: 'active',
@@ -383,6 +352,7 @@ export default defineTask({
         createdById: users[0].id,
       },
       {
+        identifier: 'VK/2025/002',
         title: 'Product Manager Recruitment',
         description: 'Looking for an experienced product manager to lead our mobile team',
         status: 'active',
@@ -390,6 +360,7 @@ export default defineTask({
         createdById: users[1].id,
       },
       {
+        identifier: 'VK/2025/003',
         title: 'Junior Developer Internship',
         description: 'Summer internship program for computer science students',
         status: 'draft',
@@ -397,6 +368,7 @@ export default defineTask({
         createdById: users[2].id,
       },
       {
+        identifier: 'VK/2025/004',
         title: 'UX Designer Position',
         description: 'Closed position - hired Sarah Williams',
         status: 'closed',
@@ -413,11 +385,10 @@ export default defineTask({
     const procedureSurveysData = [
       // For Senior Software Engineer Recruitment
       { procedureId: procedures[0].id, surveyId: surveys[0].id, order: 0 }, // Technical Assessment
-      { procedureId: procedures[0].id, surveyId: surveys[2].id, order: 0 }, // Written Exam
-      { procedureId: procedures[0].id, surveyId: surveys[1].id, order: 0 }, // Personality Test
+      { procedureId: procedures[0].id, surveyId: surveys[2].id, order: 1 }, // Written Exam
       // For Product Manager Recruitment
       { procedureId: procedures[1].id, surveyId: surveys[1].id, order: 0 }, // Personality Test
-      { procedureId: procedures[1].id, surveyId: surveys[3].id, order: 0 }, // Language Test
+      { procedureId: procedures[1].id, surveyId: surveys[3].id, order: 1 }, // Language Test
     ]
 
     const procedureSurveys = await db.insert(tables.procedureSurveys).values(procedureSurveysData).returning()
@@ -446,7 +417,22 @@ export default defineTask({
     const examCriteria = await db.insert(tables.examCriteria).values(examCriteriaData).returning()
     console.log(`✅ Created ${examCriteria.length} exam criteria`)
 
-    // 8. Seed Contenders
+    // 8. Seed Procedure Assignments (assign staff to procedures)
+    console.log('📌 Seeding procedure assignments...')
+    const subjectExpertRole = roles.find(r => r.name === 'subject_expert')!
+    const commissionMemberRole = roles.find(r => r.name === 'commission_member')!
+
+    const procedureAssignmentsData = [
+      // Assign Jane (commission_chair in org) as commission member to procedure 0
+      { procedureId: procedures[0].id, userId: users[1].id, roleId: commissionMemberRole.id },
+      // Assign Mike (admin in org 2) as subject expert to procedure 2
+      { procedureId: procedures[2].id, userId: users[2].id, roleId: subjectExpertRole.id },
+    ]
+
+    const procedureAssignments = await db.insert(tables.procedureAssignments).values(procedureAssignmentsData).returning()
+    console.log(`✅ Created ${procedureAssignments.length} procedure assignments`)
+
+    // 9. Seed Contenders
     console.log('👥 Seeding contenders...')
     const contendersData = [
       // For Senior Software Engineer
@@ -604,6 +590,7 @@ export default defineTask({
     console.log(`   - ${procedures.length} procedures`)
     console.log(`   - ${procedureSurveys.length} procedure survey assignments`)
     console.log(`   - ${examCriteria.length} exam criteria`)
+    console.log(`   - ${procedureAssignments.length} procedure staff assignments`)
     console.log(`   - ${contenders.length} contenders`)
     console.log(`   - ${contenderFiles.length} contender files`)
     console.log(`   - ${examScores.length} exam scores`)
@@ -622,6 +609,7 @@ export default defineTask({
         userOrganizations: userOrganizations.length,
         surveys: surveys.length,
         procedures: procedures.length,
+        procedureAssignments: procedureAssignments.length,
         procedureSurveys: procedureSurveys.length,
         examCriteria: examCriteria.length,
         contenders: contenders.length,

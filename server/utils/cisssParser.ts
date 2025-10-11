@@ -8,7 +8,7 @@ interface Rule {
 }
 
 const PAGE_URL
-  = 'https://cisss.gov.sk/vyberove-konania/detail/3ed5892c-8bfc-421c-b714-9b27249e2465'
+  = 'https://cisss.gov.sk/vyberove-konania/detail/b9e19e49-7484-4080-b687-4f1a573bd4cc'
 
 const rules: Record<string, Rule> = {
   id: {

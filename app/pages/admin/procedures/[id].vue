@@ -16,6 +16,10 @@ const links = [[{
   to: `/admin/procedures/${procedureId.value}`,
   exact: true,
 }, {
+  label: 'Statistics',
+  icon: 'i-lucide-bar-chart',
+  to: `/admin/procedures/${procedureId.value}/stats`,
+}, {
   label: 'Contenders',
   icon: 'i-lucide-users',
   to: `/admin/procedures/${procedureId.value}/contenders`,

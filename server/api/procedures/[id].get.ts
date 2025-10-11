@@ -8,6 +8,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Check procedure-specific access using user's role in THIS procedure
+  await requireProcedureAccess(event, Number(id), 'procedures', 'read')
+
   const db = useDrizzle()
   const procedure = await db
     .select()
@@ -21,9 +24,6 @@ export default defineEventHandler(async (event) => {
       message: 'Procedure not found',
     })
   }
-
-  // Check if user has access to this organization
-  await requireOrganizationAccess(event, procedure[0].organizationId, 'procedures', 'read')
 
   return procedure[0]
 })

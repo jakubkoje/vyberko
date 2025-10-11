@@ -20,9 +20,14 @@ export default defineEventHandler(async (event) => {
   })
 
   if (!user) {
+    console.error('User not found in database. Session:', {
+      userId: session.user.id,
+      email: session.user.email,
+      keycloakId: session.user.keycloakId,
+    })
     throw createError({
       statusCode: 404,
-      message: 'User not found',
+      message: `User not found. Session user ID: ${session.user.id}`,
     })
   }
 

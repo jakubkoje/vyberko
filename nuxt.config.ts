@@ -14,9 +14,20 @@ export default defineNuxtConfig({
     oauth: {
       keycloak: {
         clientId: process.env.NUXT_OAUTH_KEYCLOAK_CLIENT_ID || '',
+        clientSecret: process.env.NUXT_OAUTH_KEYCLOAK_CLIENT_SECRET || '',
+        adminClientId: process.env.NUXT_OAUTH_KEYCLOAK_ADMIN_CLIENT_ID || '',
+        adminClientSecret: process.env.NUXT_OAUTH_KEYCLOAK_ADMIN_CLIENT_SECRET || '',
         serverUrl: process.env.NUXT_OAUTH_KEYCLOAK_SERVER_URL || '',
         realm: process.env.NUXT_OAUTH_KEYCLOAK_REALM || '',
         redirectURL: process.env.NUXT_OAUTH_KEYCLOAK_REDIRECT_URL || '',
+      },
+    },
+    public: {
+      oauth: {
+        keycloak: {
+          serverUrl: process.env.NUXT_OAUTH_KEYCLOAK_SERVER_URL || '',
+          realm: process.env.NUXT_OAUTH_KEYCLOAK_REALM || '',
+        },
       },
     },
   },

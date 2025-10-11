@@ -36,6 +36,9 @@ export default defineEventHandler(async (event) => {
       order: tables.procedureSurveys.order,
       surveyTitle: tables.surveys.title,
       surveyJsonData: tables.surveys.jsonData,
+      timeLimit: tables.procedureSurveys.timeLimit,
+      totalPoints: tables.procedureSurveys.totalPoints,
+      passingScore: tables.procedureSurveys.passingScore,
     })
     .from(tables.procedureSurveys)
     .innerJoin(tables.surveys, eq(tables.procedureSurveys.surveyId, tables.surveys.id))

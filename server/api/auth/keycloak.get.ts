@@ -147,6 +147,20 @@ export default defineOAuthKeycloakEventHandler({
       }
     }
 
+    // Mark any pending procedure assignments as accepted (user has now logged in)
+    await db
+      .update(tables.procedureAssignments)
+      .set({
+        status: 'accepted',
+        acceptedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(tables.procedureAssignments.userId, dbUser.id),
+          eq(tables.procedureAssignments.status, 'pending'),
+        ),
+      )
+
     // Set user session using nuxt-auth-utils
     await setUserSession(event, {
       user: {

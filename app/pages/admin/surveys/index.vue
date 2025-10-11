@@ -9,29 +9,10 @@
           <UDashboardSidebarCollapse />
         </template>
 
-        <template #right>
-          <UTooltip
-            text="Notifications"
-            :shortcuts="['N']"
-          >
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip
-                color="error"
-                inset
-              >
-                <UIcon
-                  name="i-lucide-bell"
-                  class="size-5 shrink-0"
-                />
-              </UChip>
-            </UButton>
-          </UTooltip>
-
+        <template
+          v-if="can('surveys', 'create') || can('surveys', 'createAll') || can('surveys', 'createProfessional')"
+          #right
+        >
           <UButton
             icon="i-lucide-plus"
             size="md"
@@ -111,11 +92,11 @@ definePageMeta({
   layout: 'admin',
 })
 
-const { isNotificationsSlideoverOpen } = useDashboard()
 const toast = useToast()
 const overlay = useOverlay()
 const table = useTemplateRef('table')
 const router = useRouter()
+const { can } = usePermissions()
 
 const { data, status, refresh } = await useFetch('/api/surveys', {
   lazy: true,
@@ -180,27 +161,37 @@ async function createSurvey() {
 }
 
 function getRowItems(row: Row<Survey>) {
-  return [
+  const items: any[] = [
     {
       type: 'label',
       label: 'Actions',
     },
-    {
+  ]
+
+  // Edit - admin and gestor can edit
+  if (can('surveys', 'update')) {
+    items.push({
       label: 'Edit survey',
       icon: 'i-lucide-pencil',
       onSelect() {
         navigateTo(`/admin/surveys/${row.original.id}`)
       },
+    })
+  }
+
+  // Preview - everyone can preview
+  items.push({
+    label: 'Preview survey',
+    icon: 'i-lucide-eye',
+    onSelect() {
+      // TODO: Implement preview
+      console.log('Preview survey:', row.original)
     },
-    {
-      label: 'Preview survey',
-      icon: 'i-lucide-eye',
-      onSelect() {
-        // TODO: Implement preview
-        console.log('Preview survey:', row.original)
-      },
-    },
-    {
+  })
+
+  // Duplicate - admin and gestor can duplicate
+  if (can('surveys', 'duplicate')) {
+    items.push({
       label: 'Duplicate survey',
       icon: 'i-lucide-copy',
       async onSelect() {
@@ -230,17 +221,109 @@ function getRowItems(row: Row<Survey>) {
           })
         }
       },
-    },
-    {
+    })
+  }
+
+  // Submit for Approval - gestor can submit draft/rejected surveys
+  if (row.original.status === 'draft' || row.original.status === 'rejected') {
+    items.push({
       type: 'separator',
-    },
-    {
+    })
+    items.push({
+      label: 'Submit for Approval',
+      icon: 'i-lucide-send',
+      async onSelect() {
+        try {
+          await $fetch(`/api/surveys/${row.original.id}/submit-for-approval`, { method: 'POST' })
+          await refresh()
+          toast.add({
+            title: 'Survey submitted for approval',
+            color: 'success',
+          })
+        }
+        catch (error) {
+          console.error('Failed to submit survey:', error)
+          toast.add({
+            title: 'Error',
+            description: 'Failed to submit survey for approval.',
+            color: 'error',
+          })
+        }
+      },
+    })
+  }
+
+  // Approve - admin can approve pending surveys
+  if (can('surveys', 'approve') && row.original.status === 'pending_approval') {
+    items.push({
+      type: 'separator',
+    })
+    items.push({
+      label: 'Approve Survey',
+      icon: 'i-lucide-check-circle',
+      color: 'success',
+      async onSelect() {
+        try {
+          await $fetch(`/api/surveys/${row.original.id}/approve`, { method: 'POST' })
+          await refresh()
+          toast.add({
+            title: 'Survey approved',
+            color: 'success',
+          })
+        }
+        catch (error) {
+          console.error('Failed to approve survey:', error)
+          toast.add({
+            title: 'Error',
+            description: 'Failed to approve survey.',
+            color: 'error',
+          })
+        }
+      },
+    })
+    items.push({
+      label: 'Reject Survey',
+      icon: 'i-lucide-x-circle',
+      color: 'error',
+      async onSelect() {
+        const reason = prompt('Please provide a reason for rejection:')
+        if (!reason) return
+
+        try {
+          await $fetch(`/api/surveys/${row.original.id}/reject`, {
+            method: 'POST',
+            body: { rejectionReason: reason },
+          })
+          await refresh()
+          toast.add({
+            title: 'Survey rejected',
+            color: 'warning',
+          })
+        }
+        catch (error) {
+          console.error('Failed to reject survey:', error)
+          toast.add({
+            title: 'Error',
+            description: 'Failed to reject survey.',
+            color: 'error',
+          })
+        }
+      },
+    })
+  }
+
+  // Delete - only admin can delete
+  if (can('surveys', 'delete')) {
+    items.push({
+      type: 'separator',
+    })
+    items.push({
       label: 'Delete survey',
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
         if (confirm(`Are you sure you want to delete "${row.original.title}"?`)) {
-          try {
+          try{
             await $fetch(`/api/surveys/${row.original.id}`, { method: 'DELETE' })
             await refresh()
             toast.add({
@@ -258,8 +341,10 @@ function getRowItems(row: Row<Survey>) {
           }
         }
       },
-    },
-  ]
+    })
+  }
+
+  return items
 }
 
 const formatDate = (dateString: string | Date) => {
@@ -315,6 +400,30 @@ const columns: TableColumn<Survey>[] = [
         return h('span', { class: 'text-sm text-muted italic' }, 'Not assigned')
       }
       return h('span', { class: 'text-sm' }, procedure.title)
+    },
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const UBadge = resolveComponent('UBadge')
+      const statusColors: Record<string, string> = {
+        draft: 'neutral',
+        pending_approval: 'warning',
+        approved: 'success',
+        rejected: 'error',
+      }
+      const statusLabels: Record<string, string> = {
+        draft: 'Draft',
+        pending_approval: 'Pending Approval',
+        approved: 'Approved',
+        rejected: 'Rejected',
+      }
+      return h(UBadge, {
+        label: statusLabels[row.original.status] || row.original.status,
+        color: statusColors[row.original.status] || 'neutral',
+        variant: 'subtle',
+      })
     },
   },
   {

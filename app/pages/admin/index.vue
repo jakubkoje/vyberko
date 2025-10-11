@@ -7,27 +7,15 @@ definePageMeta({
   layout: 'admin',
 })
 
-const { isNotificationsSlideoverOpen } = useDashboard()
-
 const items = [[{
-  label: 'Mails',
-  icon: 'i-lucide-send',
-  to: '/admin/inbox',
-}, {
-  label: 'Customers',
-  icon: 'i-lucide-user-plus',
-  to: '/admin/customers',
+  label: 'Procedures',
+  icon: 'i-lucide-briefcase',
+  to: '/admin/procedures',
 }, {
   label: 'Surveys',
   icon: 'i-lucide-file-text',
   to: '/admin/surveys',
 }]] satisfies DropdownMenuItem[][]
-
-const range = shallowRef<Range>({
-  start: DateTime.now().minus({ days: 14 }).toJSDate(),
-  end: DateTime.now().toJSDate(),
-})
-const period = ref<Period>('daily')
 </script>
 
 <template>
@@ -40,69 +28,18 @@ const period = ref<Period>('daily')
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
-
-        <template #right>
-          <UTooltip
-            text="Notifications"
-            :shortcuts="['N']"
-          >
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip
-                color="error"
-                inset
-              >
-                <UIcon
-                  name="i-lucide-bell"
-                  class="size-5 shrink-0"
-                />
-              </UChip>
-            </UButton>
-          </UTooltip>
-
-          <UDropdownMenu :items="items">
-            <UButton
-              icon="i-lucide-plus"
-              size="md"
-              class="rounded-full"
-            />
-          </UDropdownMenu>
-        </template>
       </UDashboardNavbar>
-
-      <UDashboardToolbar>
-        <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
-          <HomeDateRangePicker
-            v-model="range"
-            class="-ms-1"
-          />
-
-          <HomePeriodSelect
-            v-model="period"
-            :range="range"
-          />
-        </template>
-      </UDashboardToolbar>
     </template>
 
     <template #body>
-      <HomeStats
-        :period="period"
-        :range="range"
-      />
-      <HomeChart
-        :period="period"
-        :range="range"
-      />
-      <HomeSales
-        :period="period"
-        :range="range"
-      />
+      <div>
+        <h1 class="text-2xl font-semibold">
+          Welcome to the admin dashboard of the platform <span class="text-4xl font-extrabold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">Vyberko</span>
+        </h1>
+        <p class="text-muted">
+          Use the sidebar to navigate to the different sections of the platform.
+        </p>
+      </div>
     </template>
   </UDashboardPanel>
 </template>

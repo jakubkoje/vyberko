@@ -1,5 +1,5 @@
 {
-  "id": "cd4a7b3a-4157-49ff-858e-e8d2c12798cc",
+  "id": "69892612-a19b-4263-8bbf-22b55460f6fc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -104,6 +104,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "cis_identifier": {
+          "name": "cis_identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "name": {
           "name": "name",
           "type": "text",
@@ -127,11 +133,17 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'pending'"
+          "default": "'registered'"
         },
         "notes": {
           "name": "notes",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -156,8 +168,43 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "contender_cis_procedure_idx": {
+          "name": "contender_cis_procedure_idx",
+          "columns": [
+            {
+              "expression": "cis_identifier",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "procedure_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
+        "contenders_user_id_users_id_fk": {
+          "name": "contenders_user_id_users_id_fk",
+          "tableFrom": "contenders",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
         "contenders_procedure_id_procedures_id_fk": {
           "name": "contenders_procedure_id_procedures_id_fk",
           "tableFrom": "contenders",
@@ -370,6 +417,85 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.oral_exam_categories": {
+      "name": "oral_exam_categories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_sk": {
+          "name": "name_sk",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_en": {
+          "name": "name_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "min_rating": {
+          "name": "min_rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "max_rating": {
+          "name": "max_rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 5
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "oral_exam_categories_slug_unique": {
+          "name": "oral_exam_categories_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.organizations": {
       "name": "organizations",
       "schema": "",
@@ -423,6 +549,238 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.procedure_assignments": {
+      "name": "procedure_assignments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "procedure_id": {
+          "name": "procedure_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "assigned_at": {
+          "name": "assigned_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "accepted_at": {
+          "name": "accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "procedure_user_idx": {
+          "name": "procedure_user_idx",
+          "columns": [
+            {
+              "expression": "procedure_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "procedure_assignments_procedure_id_procedures_id_fk": {
+          "name": "procedure_assignments_procedure_id_procedures_id_fk",
+          "tableFrom": "procedure_assignments",
+          "tableTo": "procedures",
+          "columnsFrom": [
+            "procedure_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "procedure_assignments_user_id_users_id_fk": {
+          "name": "procedure_assignments_user_id_users_id_fk",
+          "tableFrom": "procedure_assignments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "procedure_assignments_role_id_roles_id_fk": {
+          "name": "procedure_assignments_role_id_roles_id_fk",
+          "tableFrom": "procedure_assignments",
+          "tableTo": "roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.procedure_surveys": {
+      "name": "procedure_surveys",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "procedure_id": {
+          "name": "procedure_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "survey_id": {
+          "name": "survey_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "time_limit": {
+          "name": "time_limit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_points": {
+          "name": "total_points",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "passing_score": {
+          "name": "passing_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "procedure_survey_idx": {
+          "name": "procedure_survey_idx",
+          "columns": [
+            {
+              "expression": "survey_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "procedure_surveys_procedure_id_procedures_id_fk": {
+          "name": "procedure_surveys_procedure_id_procedures_id_fk",
+          "tableFrom": "procedure_surveys",
+          "tableTo": "procedures",
+          "columnsFrom": [
+            "procedure_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "procedure_surveys_survey_id_surveys_id_fk": {
+          "name": "procedure_surveys_survey_id_surveys_id_fk",
+          "tableFrom": "procedure_surveys",
+          "tableTo": "surveys",
+          "columnsFrom": [
+            "survey_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.procedures": {
       "name": "procedures",
       "schema": "",
@@ -431,6 +789,12 @@
           "name": "id",
           "type": "serial",
           "primaryKey": true,
+          "notNull": true
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
           "notNull": true
         },
         "title": {
@@ -450,7 +814,50 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'active'"
+          "default": "'draft'"
+        },
+        "procedure_type": {
+          "name": "procedure_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "organizational_unit": {
+          "name": "organizational_unit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "civil_service_sector": {
+          "name": "civil_service_sector",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position_title": {
+          "name": "position_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "service_type": {
+          "name": "service_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "procedure_date": {
+          "name": "procedure_date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "number_of_positions": {
+          "name": "number_of_positions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
         },
         "organization_id": {
           "name": "organization_id",
@@ -509,6 +916,72 @@
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "procedures_identifier_unique": {
+          "name": "procedures_identifier_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "identifier"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.question_battery": {
+      "name": "question_battery",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "category_slug": {
+          "name": "category_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_sk": {
+          "name": "question_sk",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_en": {
+          "name": "question_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order": {
+          "name": "order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -536,12 +1009,12 @@
           "primaryKey": false,
           "notNull": false
         },
-        "permissions": {
-          "name": "permissions",
-          "type": "jsonb",
+        "requires_2fa": {
+          "name": "requires_2fa",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{}'"
+          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -563,6 +1036,134 @@
           ]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.survey_responses": {
+      "name": "survey_responses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "contender_id": {
+          "name": "contender_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "survey_id": {
+          "name": "survey_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "procedure_id": {
+          "name": "procedure_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "response_data": {
+          "name": "response_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "score": {
+          "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_passed": {
+          "name": "is_passed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "time_spent_seconds": {
+          "name": "time_spent_seconds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "survey_responses_contender_id_contenders_id_fk": {
+          "name": "survey_responses_contender_id_contenders_id_fk",
+          "tableFrom": "survey_responses",
+          "tableTo": "contenders",
+          "columnsFrom": [
+            "contender_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "survey_responses_survey_id_surveys_id_fk": {
+          "name": "survey_responses_survey_id_surveys_id_fk",
+          "tableFrom": "survey_responses",
+          "tableTo": "surveys",
+          "columnsFrom": [
+            "survey_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "survey_responses_procedure_id_procedures_id_fk": {
+          "name": "survey_responses_procedure_id_procedures_id_fk",
+          "tableFrom": "survey_responses",
+          "tableTo": "procedures",
+          "columnsFrom": [
+            "procedure_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -589,6 +1190,25 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "organization_id": {
           "name": "organization_id",
@@ -784,7 +1404,7 @@
           "name": "password",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "avatar": {
           "name": "avatar",
@@ -797,6 +1417,19 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "keycloak_id": {
+          "name": "keycloak_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "auth_provider": {
+          "name": "auth_provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'local'"
         },
         "created_at": {
           "name": "created_at",
@@ -836,6 +1469,78 @@
           "nullsNotDistinct": false,
           "columns": [
             "email"
+          ]
+        },
+        "users_keycloak_id_unique": {
+          "name": "users_keycloak_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "keycloak_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.written_exam_categories": {
+      "name": "written_exam_categories",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_sk": {
+          "name": "name_sk",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_en": {
+          "name": "name_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "written_exam_categories_slug_unique": {
+          "name": "written_exam_categories_slug_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "slug"
           ]
         }
       },

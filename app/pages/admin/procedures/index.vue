@@ -9,29 +9,10 @@
           <UDashboardSidebarCollapse />
         </template>
 
-        <template #right>
-          <UTooltip
-            text="Notifications"
-            :shortcuts="['N']"
-          >
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip
-                color="error"
-                inset
-              >
-                <UIcon
-                  name="i-lucide-bell"
-                  class="size-5 shrink-0"
-                />
-              </UChip>
-            </UButton>
-          </UTooltip>
-
+        <template
+          v-if="can('procedures', 'create')"
+          #right
+        >
           <UButton
             icon="i-lucide-plus"
             size="md"
@@ -112,11 +93,11 @@ definePageMeta({
   layout: 'admin',
 })
 
-const { isNotificationsSlideoverOpen } = useDashboard()
 const toast = useToast()
 const overlay = useOverlay()
 const table = useTemplateRef('table')
 const router = useRouter()
+const { can } = usePermissions()
 
 interface Procedure {
   id: number

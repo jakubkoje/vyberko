@@ -1,3 +1,5 @@
+import { desc } from 'drizzle-orm'
+
 export default defineEventHandler(async (event) => {
   const procedureId = getRouterParam(event, 'id')
 
@@ -24,8 +26,8 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // Check if user has access to this organization
-  await requireOrganizationAccess(event, procedure[0].organizationId, 'contenders', 'read')
+  // Check if user has access to read procedures (admin can view contenders)
+  await requireOrganizationAccess(event, procedure[0].organizationId, 'procedures', 'read')
 
   const contenders = await db
     .select()

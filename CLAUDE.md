@@ -148,3 +148,39 @@ Always use Context7 MCP when generating code, mostly for NuxtUI, Drizzle and Sur
 ## Database Schema
 
 When creating new tables, always create a seeder in drizzle.
+
+
+## ROLES AND PERMISSIONS
+
+---
+Admin = tajomník VK, čo vytvorí účty pre ostatných, definuje výberové konanie v systéme, bude vytvárať a priradzovať testy, nastavovať podmienky, tiež realizovať samotné testovanie a finalizovať dokumentáciu
+
+- Vytvoriť konkrétne výberové konanie s preddefinovanou HLAVIČKOU.
+- Vytvoriť jednotlivé účty (vecného gestora, komisie, aj prihlásených uchádzačov).
+- Importovať zo SharePointu potrebné podklady. Úložisko bude slúžiť hodnotiacej komisii na prezretie (CV, certifikáty, motivačný list a iné ale aj výsledky všetkých testov, ktoré sa v testovaní realizovali). 
+- Sprístupniť vecnému gestorovi pripravené šablóny na vytvorenie testov, prevažne vo forme kvízov. (3 odpovede, jedna správna). 
+- Vytvárať tiež testy / kvízy. S možnosťou ukladať, duplikovať, opravovať. 
+- Nastaviť podmienky testovania. Definovať rozsah testu, časové rozpätie, definovať pridelené body, definovať správne odpovede.
+- Vidieť počas realizácie VK - počet prihlásených uchádzačov na danom VK, otvorené testy, časovač a aj priebežné výsledky..
+- Preddefinovať hodnotiace prostredie pre hodnotiacu komisiu. Preddefinovať schopnosti a osobnostné vlastnosti pri jednotlivých VK,  vybrať z databázy otázky,  definovať položky hodnotiaceho hárku – priestor, kde bude člen hodnotiacej komisie prideľovať počet bodov. 
+- Spustiť prenos výsledkov do pripravenej dokumentácie a odoslať si na e-mail pdf verzie na založenie do listinného spisu.  
+
+---
+
+Vecný gestor = zadávateľ výberového konania (v prostredí bude primárne vytvárať testy)
+
+- Vytvoriť test na základe preddefinovanej šablóny, ktorú mu zaslal Admin
+- GESTOR IBA ODBORNY TEST vie vytvorit
+
+---
+
+Komisia = členovia výberovej komisie (v prostredí budú primárne prezerať podklady z úložiska a hodnotiť ústnu časť priradením počtu bodov) 
+
+- Vedieť sa prihlásiť do systému 
+- Otvoriť si konkrétne výberové konanie 
+- Otvoriť si zložku uchádzača, ktorý predstupuje
+- Vidieť v zložke – úložisku (CV, motivačný list, certifikáty,)
+- Vidieť v zložke výsledky aj chyby jednotlivých testov
+- Vidieť preddefinované hodnotené schopnosti a osobnostné vlastnosti 
+- Vidieť batériu otázok
+- Prideliť počet bodov, ku každej schopnosti a osobnostnej vlastnosti

@@ -34,15 +34,38 @@ async function openCreateModal() {
 
   if (result.submitted && result.data) {
     try {
-      await $fetch(`/api/procedures/${procedureId.value}/contenders`, {
+      const response = await $fetch<any>(`/api/procedures/${procedureId.value}/contenders`, {
         method: 'POST',
         body: result.data,
       })
 
-      toast.add({
-        title: 'Contender added successfully',
-        color: 'success',
-      })
+      // Show credentials in toast
+      if (response?.credentials) {
+        toast.add({
+          title: 'Contender added successfully',
+          description: `Login credentials:\nUsername: ${response.credentials.username}\nPassword: ${response.credentials.temporaryPassword}\n\nPlease save these credentials and share them with the candidate.`,
+          color: 'success',
+          timeout: 0, // Don't auto-dismiss
+          actions: [{
+            label: 'Copy Credentials',
+            click: () => {
+              navigator.clipboard.writeText(
+                `Username: ${response.credentials.username}\nPassword: ${response.credentials.temporaryPassword}`,
+              )
+              toast.add({
+                title: 'Credentials copied to clipboard',
+                color: 'success',
+              })
+            },
+          }],
+        })
+      }
+      else {
+        toast.add({
+          title: 'Contender added successfully',
+          color: 'success',
+        })
+      }
 
       refresh()
     }

@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import { UInputMenu } from '#components'
+import { LazyProceduresAssignStaffModal, LazyProceduresConfigureTestConditionsModal } from '#components'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const overlay = useOverlay()
+const { can } = usePermissions()
 
 const procedureId = computed(() => Number(route.params.id))
 
 const { data: procedure, refresh } = await useFetch(`/api/procedures/${procedureId.value}`)
+const { data: staffAssignments, refresh: refreshStaffAssignments } = await useFetch(`/api/procedures/${procedureId.value}/assignments`, {
+  default: () => [],
+})
 const { data: examCriteria, refresh: refreshCriteria } = await useFetch(`/api/procedures/${procedureId.value}/exam-criteria`, {
   default: () => [],
 })
@@ -269,6 +275,114 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
     })
   }
 }
+
+// Staff Assignment Management
+const staffModal = overlay.create(LazyProceduresAssignStaffModal)
+const testConditionsModal = overlay.create(LazyProceduresConfigureTestConditionsModal)
+
+async function openAssignStaffModal() {
+  const instance = staffModal.open({
+    procedureId: procedureId.value,
+  })
+
+  const result: {
+    submitted: boolean
+    data?: { name: string, email: string, roleId: number }
+  } = await instance.result
+
+  if (result.submitted && result.data) {
+    try {
+      await $fetch(`/api/procedures/${procedureId.value}/assignments`, {
+        method: 'POST',
+        body: result.data,
+      })
+
+      toast.add({
+        title: 'Staff assigned successfully',
+        color: 'success',
+      })
+
+      refreshStaffAssignments()
+    }
+    catch (error) {
+      toast.add({
+        title: 'Failed to assign staff',
+        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        color: 'error',
+      })
+    }
+  }
+}
+
+async function openTestConditionsModal(procedureSurvey: any) {
+  const instance = testConditionsModal.open({
+    procedureSurveyId: procedureSurvey.id,
+    surveyTitle: procedureSurvey.surveyTitle,
+    currentConditions: {
+      timeLimit: procedureSurvey.timeLimit,
+      totalPoints: procedureSurvey.totalPoints,
+      passingScore: procedureSurvey.passingScore,
+    },
+  })
+
+  const result: {
+    submitted: boolean
+    data?: {
+      timeLimit?: number | null
+      totalPoints?: number | null
+      passingScore?: number | null
+    }
+  } = await instance.result
+
+  if (result.submitted && result.data) {
+    try {
+      await $fetch(`/api/procedure-surveys/${procedureSurvey.id}`, {
+        method: 'PUT',
+        body: result.data,
+      })
+
+      toast.add({
+        title: 'Test conditions updated',
+        color: 'success',
+      })
+
+      refreshProcedureSurveys()
+    }
+    catch (error) {
+      toast.add({
+        title: 'Failed to update test conditions',
+        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        color: 'error',
+      })
+    }
+  }
+}
+
+async function removeStaffAssignment(assignmentId: number, userName: string) {
+  if (!confirm(`Remove ${userName} from this procedure?`)) {
+    return
+  }
+
+  try {
+    await $fetch(`/api/procedure-assignments/${assignmentId}`, {
+      method: 'DELETE',
+    })
+
+    toast.add({
+      title: 'Staff removed',
+      color: 'success',
+    })
+
+    await refreshStaffAssignments()
+  }
+  catch (error) {
+    toast.add({
+      title: 'Failed to remove staff',
+      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      color: 'error',
+    })
+  }
+}
 </script>
 
 <template>
@@ -346,7 +460,7 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
         </div>
       </template>
       <template
-        v-if="!isEditing"
+        v-if="!isEditing && can('procedures', 'update')"
         #footer
       >
         <UButton
@@ -374,6 +488,84 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
       </template>
     </UPageCard>
 
+    <!-- Staff Assignments -->
+    <UPageCard
+      title="Staff Assignments"
+      description="Assign staff members to work on this procedure. Only assigned staff can evaluate candidates."
+    >
+      <div class="space-y-4">
+        <!-- Currently Assigned Staff -->
+        <div
+          v-if="staffAssignments && staffAssignments.length > 0"
+          class="space-y-2"
+        >
+          <div
+            v-for="assignment in staffAssignments"
+            :key="assignment.id"
+            class="flex items-center justify-between p-3 rounded-md border border-default"
+          >
+            <div class="flex items-center gap-3">
+              <UAvatar
+                :src="assignment.userAvatar"
+                :alt="assignment.userName"
+                size="md"
+              />
+              <div>
+                <p class="text-sm font-medium text-highlighted">
+                  {{ assignment.userName }}
+                </p>
+                <p class="text-xs text-muted">
+                  {{ assignment.userEmail }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <UBadge
+                :label="assignment.roleDisplayName"
+                variant="subtle"
+                color="primary"
+              />
+              <UBadge
+                :label="assignment.status === 'pending' ? 'Pending' : 'Active'"
+                variant="subtle"
+                :color="assignment.status === 'pending' ? 'warning' : 'success'"
+                :icon="assignment.status === 'pending' ? 'i-lucide-clock' : 'i-lucide-check-circle'"
+              />
+              <UButton
+                v-if="can('procedures', 'assignStaff')"
+                icon="i-lucide-x"
+                color="error"
+                variant="ghost"
+                size="xs"
+                @click="removeStaffAssignment(assignment.id, assignment.userName)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="text-center py-6"
+        >
+          <UIcon
+            name="i-lucide-users"
+            class="size-10 text-muted mb-2 mx-auto"
+          />
+          <p class="text-sm text-muted">
+            No staff assigned yet
+          </p>
+        </div>
+
+        <UButton
+          v-if="can('procedures', 'assignStaff')"
+          label="Assign Staff"
+          icon="i-lucide-user-plus"
+          color="neutral"
+          @click="openAssignStaffModal"
+        />
+      </div>
+    </UPageCard>
+
     <!-- Oral Exam Criteria -->
     <UPageCard
       title="Oral Exam Criteria"
@@ -393,7 +585,10 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
             color="primary"
             class="pr-1"
           >
-            <template #trailing>
+            <template
+              v-if="can('evaluation', 'defineAbilities')"
+              #trailing
+            >
               <UButton
                 icon="i-lucide-x"
                 color="primary"
@@ -420,7 +615,7 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
 
         <!-- Add Criteria Selector -->
         <div
-          v-if="availableOptions.length > 0"
+          v-if="availableOptions.length > 0 && can('evaluation', 'defineAbilities')"
           class="space-y-3"
         >
           <UFormField label="Add Criteria">
@@ -475,25 +670,70 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
               <h4 class="text-sm font-medium text-highlighted">
                 {{ category.label }}
               </h4>
-              <div class="flex flex-wrap gap-2">
-                <UBadge
+              <div class="space-y-3">
+                <div
                   v-for="procedureSurvey in surveysByCategory[category.value]"
                   :key="procedureSurvey.id"
-                  :label="procedureSurvey.surveyTitle"
-                  variant="subtle"
-                  color="primary"
-                  class="pr-1"
+                  class="flex items-center justify-between p-3 rounded-md border border-default"
                 >
-                  <template #trailing>
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                      <UBadge
+                        :label="procedureSurvey.surveyTitle"
+                        variant="subtle"
+                        color="primary"
+                      />
+                    </div>
+                    <div class="flex flex-wrap gap-3 text-xs text-muted">
+                      <div
+                        v-if="procedureSurvey.timeLimit"
+                        class="flex items-center gap-1"
+                      >
+                        <UIcon name="i-lucide-clock" />
+                        <span>{{ procedureSurvey.timeLimit }} min</span>
+                      </div>
+                      <div
+                        v-if="procedureSurvey.totalPoints"
+                        class="flex items-center gap-1"
+                      >
+                        <UIcon name="i-lucide-target" />
+                        <span>{{ procedureSurvey.totalPoints }} pts</span>
+                      </div>
+                      <div
+                        v-if="procedureSurvey.passingScore"
+                        class="flex items-center gap-1"
+                      >
+                        <UIcon name="i-lucide-check-circle" />
+                        <span>Pass: {{ procedureSurvey.passingScore }}</span>
+                      </div>
+                      <div
+                        v-if="!procedureSurvey.timeLimit && !procedureSurvey.totalPoints && !procedureSurvey.passingScore"
+                        class="text-muted italic"
+                      >
+                        No test conditions configured
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    v-if="can('procedures', 'manageTests')"
+                    class="flex items-center gap-1"
+                  >
+                    <UButton
+                      icon="i-lucide-settings"
+                      color="neutral"
+                      variant="ghost"
+                      size="xs"
+                      @click="openTestConditionsModal(procedureSurvey)"
+                    />
                     <UButton
                       icon="i-lucide-x"
-                      color="primary"
+                      color="error"
                       variant="ghost"
-                      size="2xs"
+                      size="xs"
                       @click="removeSurveyFromProcedure(procedureSurvey.id, procedureSurvey.surveyTitle)"
                     />
-                  </template>
-                </UBadge>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -514,7 +754,7 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
 
         <!-- Add Survey Form -->
         <div
-          v-if="availableSurveys.length > 0"
+          v-if="availableSurveys.length > 0 && can('procedures', 'manageTests')"
           class="space-y-3 pt-4 border-t border-default"
         >
           <UFormField label="Add Surveys">
@@ -549,6 +789,7 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
 
     <!-- Danger Zone -->
     <UPageCard
+      v-if="can('procedures', 'delete')"
       title="Danger Zone"
       description="Irreversible actions that permanently affect this procedure."
     >

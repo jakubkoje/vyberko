@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/node-postgres'
 
 import * as schema from '../database/schema'
 
-export { sql, eq, and, or, asc, desc } from 'drizzle-orm'
+export { sql, eq, and, or, asc, desc, like } from 'drizzle-orm'
 
 export const tables = schema
 
