@@ -434,7 +434,7 @@
 </template>
 
 <script setup lang="ts">
-const accessCode = ref('')
+const accessCode = ref('UC-111')
 const searchQuery = ref('')
 
 const startTest = () => {
