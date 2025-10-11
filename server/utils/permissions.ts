@@ -31,6 +31,7 @@ export interface Permission {
     evaluateCandidates?: boolean
     viewResults?: boolean
     viewTestErrors?: boolean // View detailed test errors
+    finalize?: boolean // Finalize and close procedure
     finalizeDocumentation?: boolean // Export and send PDF
     importSharePoint?: boolean // Import documents from SharePoint
   }
@@ -88,6 +89,7 @@ export function getRolePermissions(roleName: string): Permission {
           evaluateCandidates: true,
           viewResults: true,
           viewTestErrors: true,
+          finalize: true, // Finalize and close procedure
           finalizeDocumentation: true, // Export and send PDF
           importSharePoint: true,
         },
@@ -139,6 +141,7 @@ export function getRolePermissions(roleName: string): Permission {
           evaluateCandidates: false,
           viewResults: false,
           viewTestErrors: false,
+          finalize: false,
           finalizeDocumentation: false,
           importSharePoint: false,
         },
@@ -190,6 +193,7 @@ export function getRolePermissions(roleName: string): Permission {
           evaluateCandidates: true,
           viewResults: true,
           viewTestErrors: true, // Can view detailed test errors
+          finalize: false,
           finalizeDocumentation: false,
           importSharePoint: false,
         },
@@ -241,6 +245,7 @@ export function getRolePermissions(roleName: string): Permission {
           evaluateCandidates: true,
           viewResults: true,
           viewTestErrors: true, // Can view detailed test errors
+          finalize: false,
           finalizeDocumentation: false, // CANNOT finalize
           importSharePoint: false,
         },
@@ -292,6 +297,7 @@ export function getRolePermissions(roleName: string): Permission {
           evaluateCandidates: false,
           viewResults: true, // Can view own results
           viewTestErrors: false,
+          finalize: false,
           finalizeDocumentation: false,
           importSharePoint: false,
         },
@@ -345,6 +351,7 @@ export function getRolePermissions(roleName: string): Permission {
           evaluateCandidates: false,
           viewResults: false,
           viewTestErrors: false,
+          finalize: false,
           finalizeDocumentation: false,
           importSharePoint: false,
         },

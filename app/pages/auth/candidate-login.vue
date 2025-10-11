@@ -26,7 +26,7 @@ async function handleLogin() {
     }
   }
   catch (err: any) {
-    error.value = err.data?.message || 'Invalid credentials. Please try again.'
+    error.value = err.data?.message || 'Neplatné prihlasovacie údaje. Skúste to prosím znova.'
   }
   finally {
     loading.value = false
@@ -40,14 +40,14 @@ async function handleLogin() {
       <template #header>
         <div class="flex items-center justify-between">
           <h1 class="text-2xl font-bold">
-            Candidate Login
+            Prihlásenie uchádzača
           </h1>
         </div>
       </template>
 
       <form class="space-y-4" @submit.prevent="handleLogin">
         <p class="text-sm text-gray-600 dark:text-gray-400">
-          Enter your CIS identifier and the temporary password provided by the administrator.
+          Zadajte váš identifikátor a dočasné heslo poskytnuté administrátorom.
         </p>
 
         <UAlert
@@ -59,20 +59,20 @@ async function handleLogin() {
           @close="error = null"
         />
 
-        <UFormGroup label="CIS Identifier" name="cisIdentifier" required>
+        <UFormGroup label="Identifikátor" name="cisIdentifier" required>
           <UInput
             v-model="cisIdentifier"
-            placeholder="CIS-2025-001"
+            placeholder="UC-2025-0001"
             size="lg"
             :disabled="loading"
           />
         </UFormGroup>
 
-        <UFormGroup label="Password" name="password" required>
+        <UFormGroup label="Heslo" name="password" required>
           <UInput
             v-model="password"
             type="password"
-            placeholder="Enter your temporary password"
+            placeholder="Zadajte vaše dočasné heslo"
             size="lg"
             :disabled="loading"
           />
@@ -85,20 +85,20 @@ async function handleLogin() {
           :loading="loading"
           :disabled="!cisIdentifier || !password"
         >
-          Login
+          Prihlásiť sa
         </UButton>
 
-        <UDivider label="OR" />
+        <UDivider label="ALEBO" />
 
         <div class="text-center">
           <p class="text-sm text-gray-600 dark:text-gray-400">
-            Are you a staff member?
+            Ste zamestnanec?
           </p>
           <UButton
             variant="link"
             to="/auth/staff-login"
           >
-            Staff Login →
+            Prihlásenie zamestnancov →
           </UButton>
         </div>
       </form>

@@ -24,18 +24,18 @@ const { data: roles } = await useFetch<{ id: number, name: string, displayName: 
 const schema = v.object({
   name: v.pipe(
     v.string(),
-    v.nonEmpty('Name is required'),
-    v.minLength(2, 'Name must be at least 2 characters'),
-    v.maxLength(100, 'Name must not exceed 100 characters'),
+    v.nonEmpty('Meno je povinné'),
+    v.minLength(2, 'Meno musí mať aspoň 2 znaky'),
+    v.maxLength(100, 'Meno nesmie presiahnuť 100 znakov'),
   ),
   email: v.pipe(
     v.string(),
-    v.nonEmpty('Email is required'),
-    v.email('Please enter a valid email address'),
+    v.nonEmpty('Email je povinný'),
+    v.email('Prosím zadajte platnú emailovú adresu'),
   ),
   roleId: v.pipe(
-    v.number('Please select a role'),
-    v.minValue(1, 'Please select a role'),
+    v.number('Prosím vyberte rolu'),
+    v.minValue(1, 'Prosím vyberte rolu'),
   ),
 })
 
@@ -68,7 +68,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    title="Assign Staff to Procedure"
+    title="Priradiť zamestnanca k výberovému konaniu"
   >
     <template #body>
       <UForm
@@ -79,13 +79,13 @@ function onCancel() {
         @submit="onSubmit"
       >
         <UFormField
-          label="Name"
+          label="Meno"
           name="name"
           required
         >
           <UInput
             v-model="state.name"
-            placeholder="John Doe"
+            placeholder="Ján Novák"
             class="w-full"
           />
         </UFormField>
@@ -98,21 +98,21 @@ function onCancel() {
           <UInput
             v-model="state.email"
             type="email"
-            placeholder="john@example.com"
+            placeholder="jan@priklad.sk"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Role"
+          label="Rola"
           name="roleId"
           required
-          help="Select the role for this staff member on this procedure"
+          help="Vyberte rolu pre tohto zamestnanca na tomto výberovom konaní"
         >
           <UInputMenu
             v-model="state.roleId"
             :options="roles.map(r => ({ label: r.displayName, value: r.id }))"
-            placeholder="Select a role..."
+            placeholder="Vyberte rolu..."
             class="w-full"
             value-attribute="value"
           />
@@ -122,8 +122,8 @@ function onCancel() {
           color="info"
           variant="subtle"
           icon="i-lucide-mail"
-          title="Email Invitation"
-          description="If this user doesn't have an account yet, they will receive an email invitation to register and verify their account."
+          title="Emailová pozvánka"
+          description="Ak tento používateľ ešte nemá účet, dostane emailovú pozvánku na registráciu a overenie účtu."
         />
       </UForm>
     </template>
@@ -132,11 +132,11 @@ function onCancel() {
       <UButton
         color="neutral"
         variant="ghost"
-        label="Cancel"
+        label="Zrušiť"
         @click="onCancel"
       />
       <UButton
-        label="Assign Staff"
+        label="Priradiť zamestnanca"
         @click="form?.submit()"
       />
     </template>

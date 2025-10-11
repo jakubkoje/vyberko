@@ -39,13 +39,13 @@ const categoryOptions = computed(() => {
 const schema = v.object({
   title: v.pipe(
     v.string(),
-    v.nonEmpty('Title is required'),
-    v.minLength(3, 'Title must be at least 3 characters'),
-    v.maxLength(200, 'Title must not exceed 200 characters'),
+    v.nonEmpty('Názov je povinný'),
+    v.minLength(3, 'Názov musí mať aspoň 3 znaky'),
+    v.maxLength(200, 'Názov nesmie presiahnuť 200 znakov'),
   ),
   category: v.pipe(
     v.string(),
-    v.nonEmpty('Category is required'),
+    v.nonEmpty('Kategória je povinná'),
   ),
 })
 
@@ -74,7 +74,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    title="Create Survey"
+    title="Vytvoriť test"
   >
     <template #body>
       <UForm
@@ -85,28 +85,28 @@ function onCancel() {
         @submit="onSubmit"
       >
         <UFormField
-          label="Title"
+          label="Názov"
           name="title"
           required
         >
           <UInput
             v-model="state.title"
-            placeholder="Employee Satisfaction Survey"
+            placeholder="Odborný test"
             class="w-full"
             autofocus
           />
         </UFormField>
 
         <UFormField
-          label="Category"
+          label="Kategória"
           name="category"
-          description="This determines when the survey will be used in the recruitment process."
+          description="Určuje kedy bude test použitý vo výberovom konaní."
           required
         >
           <USelect
             v-model="state.category"
             :items="categoryOptions"
-            placeholder="Select category"
+            placeholder="Vyberte kategóriu"
             class="w-full"
           />
         </UFormField>
@@ -117,11 +117,11 @@ function onCancel() {
       <UButton
         color="neutral"
         variant="ghost"
-        label="Cancel"
+        label="Zrušiť"
         @click="onCancel"
       />
       <UButton
-        label="Create Survey"
+        label="Vytvoriť test"
         @click="form?.submit()"
       />
     </template>

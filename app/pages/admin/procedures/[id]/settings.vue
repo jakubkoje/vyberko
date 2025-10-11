@@ -35,18 +35,35 @@ const editState = reactive({
   title: procedure.value?.title || '',
   description: procedure.value?.description || '',
   status: procedure.value?.status || 'active',
+  procedureType: procedure.value?.procedureType || '',
+  organizationalUnit: procedure.value?.organizationalUnit || '',
+  civilServiceSector: procedure.value?.civilServiceSector || '',
+  positionTitle: procedure.value?.positionTitle || '',
+  serviceType: procedure.value?.serviceType || '',
+  procedureDate: procedure.value?.procedureDate || null,
+  numberOfPositions: procedure.value?.numberOfPositions || 1,
 })
 
 const statusOptions = [
-  { label: 'Active', value: 'active' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Closed', value: 'closed' },
+  { label: 'Koncept', value: 'draft' },
+  { label: 'Aktívne', value: 'active' },
+  { label: 'Testovanie', value: 'testing' },
+  { label: 'Hodnotenie', value: 'evaluating' },
+  { label: 'Dokončené', value: 'completed' },
+  { label: 'Zrušené', value: 'cancelled' },
 ]
 
 function startEditing() {
   editState.title = procedure.value?.title || ''
   editState.description = procedure.value?.description || ''
   editState.status = procedure.value?.status || 'active'
+  editState.procedureType = procedure.value?.procedureType || ''
+  editState.organizationalUnit = procedure.value?.organizationalUnit || ''
+  editState.civilServiceSector = procedure.value?.civilServiceSector || ''
+  editState.positionTitle = procedure.value?.positionTitle || ''
+  editState.serviceType = procedure.value?.serviceType || ''
+  editState.procedureDate = procedure.value?.procedureDate || null
+  editState.numberOfPositions = procedure.value?.numberOfPositions || 1
   isEditing.value = true
 }
 
@@ -62,8 +79,8 @@ async function saveChanges() {
     })
 
     toast.add({
-      title: 'Changes saved',
-      description: 'Procedure settings have been updated.',
+      title: 'Zmeny uložené',
+      description: 'Nastavenia výberového konania boli aktualizované.',
       color: 'success',
     })
 
@@ -72,15 +89,15 @@ async function saveChanges() {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to save changes',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa uložiť zmeny',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
   }
 }
 
 async function deleteProcedure() {
-  if (!confirm(`Are you sure you want to delete "${procedure.value?.title}"? This action cannot be undone and will delete all associated contenders.`)) {
+  if (!confirm(`Naozaj chcete odstrániť "${procedure.value?.title}"? Táto akcia sa nedá vrátiť späť a odstráni všetkých priradených uchádzačov.`)) {
     return
   }
 
@@ -90,8 +107,8 @@ async function deleteProcedure() {
     })
 
     toast.add({
-      title: 'Procedure deleted',
-      description: 'The procedure has been permanently deleted.',
+      title: 'Výberové konanie odstránené',
+      description: 'Výberové konanie bolo natrvalo odstránené.',
       color: 'success',
     })
 
@@ -99,8 +116,8 @@ async function deleteProcedure() {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to delete procedure',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa odstrániť výberové konanie',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
   }
@@ -135,8 +152,8 @@ async function addSelectedCriteria() {
     })
 
     toast.add({
-      title: 'Criteria added',
-      description: `Added ${selectedCriteriaValues.value.length} criteria`,
+      title: 'Kritériá pridané',
+      description: `Pridané ${selectedCriteriaValues.value.length} kritériá`,
       color: 'success',
     })
 
@@ -145,15 +162,15 @@ async function addSelectedCriteria() {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to add criteria',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa pridať kritériá',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
   }
 }
 
 async function removeCriteria(criteriaId: number, criteriaName: string) {
-  if (!confirm(`Remove "${getCriteriaLabel(criteriaName)}" from exam criteria? This will also delete all associated exam scores.`)) {
+  if (!confirm(`Odstrániť "${getCriteriaLabel(criteriaName)}" z kritérií skúšky? Toto vymaže aj všetky súvisiace hodnotenia.`)) {
     return
   }
 
@@ -163,7 +180,7 @@ async function removeCriteria(criteriaId: number, criteriaName: string) {
     })
 
     toast.add({
-      title: 'Criteria removed',
+      title: 'Kritérium odstránené',
       color: 'success',
     })
 
@@ -171,8 +188,8 @@ async function removeCriteria(criteriaId: number, criteriaName: string) {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to remove criteria',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa odstrániť kritérium',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
   }
@@ -233,8 +250,8 @@ async function addSelectedSurveys() {
     )
 
     toast.add({
-      title: 'Surveys added',
-      description: `Added ${selectedSurveyIds.value.length} survey(s)`,
+      title: 'Testy pridané',
+      description: `Pridaných ${selectedSurveyIds.value.length} testov`,
       color: 'success',
     })
 
@@ -243,15 +260,15 @@ async function addSelectedSurveys() {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to add surveys',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa pridať testy',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
   }
 }
 
 async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle: string) {
-  if (!confirm(`Remove "${surveyTitle}" from this procedure?`)) {
+  if (!confirm(`Odstrániť "${surveyTitle}" z tohto výberového konania?`)) {
     return
   }
 
@@ -261,7 +278,7 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
     })
 
     toast.add({
-      title: 'Survey removed',
+      title: 'Test odstránený',
       color: 'success',
     })
 
@@ -269,8 +286,8 @@ async function removeSurveyFromProcedure(procedureSurveyId: number, surveyTitle:
   }
   catch (error) {
     toast.add({
-      title: 'Failed to remove survey',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa odstrániť test',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
   }
@@ -298,7 +315,7 @@ async function openAssignStaffModal() {
       })
 
       toast.add({
-        title: 'Staff assigned successfully',
+        title: 'Zamestnanec úspešne priradený',
         color: 'success',
       })
 
@@ -306,8 +323,8 @@ async function openAssignStaffModal() {
     }
     catch (error) {
       toast.add({
-        title: 'Failed to assign staff',
-        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        title: 'Nepodarilo sa priradiť zamestnanca',
+        description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
         color: 'error',
       })
     }
@@ -342,7 +359,7 @@ async function openTestConditionsModal(procedureSurvey: any) {
       })
 
       toast.add({
-        title: 'Test conditions updated',
+        title: 'Podmienky testu aktualizované',
         color: 'success',
       })
 
@@ -350,8 +367,8 @@ async function openTestConditionsModal(procedureSurvey: any) {
     }
     catch (error) {
       toast.add({
-        title: 'Failed to update test conditions',
-        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        title: 'Nepodarilo sa aktualizovať podmienky testu',
+        description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
         color: 'error',
       })
     }
@@ -359,7 +376,7 @@ async function openTestConditionsModal(procedureSurvey: any) {
 }
 
 async function removeStaffAssignment(assignmentId: number, userName: string) {
-  if (!confirm(`Remove ${userName} from this procedure?`)) {
+  if (!confirm(`Odstrániť ${userName} z tohto výberového konania?`)) {
     return
   }
 
@@ -369,7 +386,7 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
     })
 
     toast.add({
-      title: 'Staff removed',
+      title: 'Zamestnanec odstránený',
       color: 'success',
     })
 
@@ -377,10 +394,45 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to remove staff',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa odstrániť zamestnanca',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
+  }
+}
+
+// Evaluate and submit
+const isSubmitting = ref(false)
+
+async function evaluateAndSubmit() {
+  if (!confirm('Naozaj chcete vyhodnotiť a uzavrieť toto výberové konanie? Po uzavretí nebude možné ho upravovať.')) {
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    await $fetch(`/api/procedures/${procedureId.value}/finalize`, {
+      method: 'POST',
+    })
+
+    toast.add({
+      title: 'Výberové konanie uzavreté',
+      description: 'Výsledky boli vyhodnotené a výberové konanie bolo úspešne uzavreté.',
+      color: 'success',
+    })
+
+    await refresh()
+  }
+  catch (error) {
+    toast.add({
+      title: 'Nepodarilo sa uzavrieť výberové konanie',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
+      color: 'error',
+    })
+  }
+  finally {
+    isSubmitting.value = false
   }
 }
 </script>
@@ -389,14 +441,38 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
   <div class="space-y-6">
     <!-- General Settings -->
     <UPageCard
-      title="General Settings"
-      description="Manage basic information about this recruitment procedure."
+      title="Všeobecné nastavenia"
+      description="Spravujte základné informácie o tomto výberovom konaní."
     >
       <template v-if="!isEditing">
         <div class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Identifikátor
+              </dt>
+              <dd class="text-sm text-highlighted font-mono">
+                {{ procedure?.identifier }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Stav
+              </dt>
+              <dd class="text-sm">
+                <UBadge
+                  :label="statusOptions.find(o => o.value === procedure?.status)?.label || procedure?.status"
+                  :color="procedure?.status === 'active' ? 'success' : procedure?.status === 'draft' ? 'warning' : 'error'"
+                  variant="subtle"
+                />
+              </dd>
+            </div>
+          </div>
+
           <div>
             <dt class="text-sm font-medium text-muted mb-1">
-              Title
+              Názov
             </dt>
             <dd class="text-sm text-highlighted">
               {{ procedure?.title }}
@@ -405,25 +481,76 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
 
           <div v-if="procedure?.description">
             <dt class="text-sm font-medium text-muted mb-1">
-              Description
+              Popis
             </dt>
             <dd class="text-sm text-highlighted whitespace-pre-wrap">
               {{ procedure.description }}
             </dd>
           </div>
 
-          <div>
-            <dt class="text-sm font-medium text-muted mb-1">
-              Status
-            </dt>
-            <dd class="text-sm">
-              <UBadge
-                :label="procedure?.status"
-                :color="procedure?.status === 'active' ? 'success' : procedure?.status === 'draft' ? 'warning' : 'error'"
-                variant="subtle"
-                class="capitalize"
-              />
-            </dd>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-default">
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Druh výberového konania
+              </dt>
+              <dd class="text-sm text-highlighted">
+                {{ procedure?.procedureType || 'Nezadané' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Druh štátnej služby
+              </dt>
+              <dd class="text-sm text-highlighted">
+                {{ procedure?.serviceType || 'Nezadané' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Odbor štátnej služby
+              </dt>
+              <dd class="text-sm text-highlighted">
+                {{ procedure?.civilServiceSector || 'Nezadané' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Zaradenie v organizačnej štruktúre
+              </dt>
+              <dd class="text-sm text-highlighted">
+                {{ procedure?.organizationalUnit || 'Nezadané' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Obsadzovaná funkcia
+              </dt>
+              <dd class="text-sm text-highlighted">
+                {{ procedure?.positionTitle || 'Nezadané' }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Počet obsadzovaných miest
+              </dt>
+              <dd class="text-sm text-highlighted">
+                {{ procedure?.numberOfPositions || 1 }}
+              </dd>
+            </div>
+
+            <div>
+              <dt class="text-sm font-medium text-muted mb-1">
+                Dátum konania
+              </dt>
+              <dd class="text-sm text-highlighted">
+                {{ procedure?.procedureDate ? new Date(procedure.procedureDate).toLocaleDateString('sk-SK') : 'Nezadané' }}
+              </dd>
+            </div>
           </div>
         </div>
       </template>
@@ -431,25 +558,25 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
       <template v-else>
         <div class="space-y-4">
           <UFormField
-            label="Title"
+            label="Názov"
             required
           >
             <UInput
               v-model="editState.title"
-              placeholder="Enter procedure title"
+              placeholder="Zadajte názov výberového konania"
             />
           </UFormField>
 
-          <UFormField label="Description">
+          <UFormField label="Popis">
             <UTextarea
               v-model="editState.description"
-              placeholder="Enter a description for this procedure..."
+              placeholder="Zadajte popis výberového konania..."
               :rows="4"
             />
           </UFormField>
 
           <UFormField
-            label="Status"
+            label="Stav"
             required
           >
             <USelect
@@ -457,6 +584,76 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
               :items="statusOptions"
             />
           </UFormField>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-default">
+            <UFormField
+              label="Druh výberového konania"
+              required
+            >
+              <UInput
+                v-model="editState.procedureType"
+                placeholder="napr. širšie vnútorné VK"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Druh štátnej služby"
+              required
+            >
+              <UInput
+                v-model="editState.serviceType"
+                placeholder="napr. stála štátna služba"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Odbor štátnej služby"
+              required
+            >
+              <UInput
+                v-model="editState.civilServiceSector"
+                placeholder="napr. 1.03 – Medzinárodná spolupráca"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Zaradenie v organizačnej štruktúre"
+              required
+            >
+              <UInput
+                v-model="editState.organizationalUnit"
+                placeholder="napr. odbor implementácie OKP"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Obsadzovaná funkcia"
+              required
+            >
+              <UInput
+                v-model="editState.positionTitle"
+                placeholder="napr. hlavný štátny radca"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Počet obsadzovaných miest"
+              required
+            >
+              <UInput
+                v-model.number="editState.numberOfPositions"
+                type="number"
+                min="1"
+              />
+            </UFormField>
+
+            <UFormField label="Dátum konania">
+              <UInput
+                v-model="editState.procedureDate"
+                type="date"
+              />
+            </UFormField>
+          </div>
         </div>
       </template>
       <template
@@ -464,7 +661,7 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
         #footer
       >
         <UButton
-          label="Edit"
+          label="Upraviť"
           color="neutral"
           @click="startEditing"
         />
@@ -475,13 +672,13 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
       >
         <div class="flex gap-2">
           <UButton
-            label="Cancel"
+            label="Zrušiť"
             color="neutral"
             variant="ghost"
             @click="cancelEditing"
           />
           <UButton
-            label="Save Changes"
+            label="Uložiť zmeny"
             @click="saveChanges"
           />
         </div>
@@ -490,8 +687,8 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
 
     <!-- Staff Assignments -->
     <UPageCard
-      title="Staff Assignments"
-      description="Assign staff members to work on this procedure. Only assigned staff can evaluate candidates."
+      title="Priradení zamestnanci"
+      description="Priraďte zamestnancov k výberovému konaniu. Len priradení zamestnanci môžu hodnotiť uchádzačov."
     >
       <div class="space-y-4">
         <!-- Currently Assigned Staff -->
@@ -526,7 +723,7 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
                 color="primary"
               />
               <UBadge
-                :label="assignment.status === 'pending' ? 'Pending' : 'Active'"
+                :label="assignment.status === 'pending' ? 'Čaká' : 'Aktívny'"
                 variant="subtle"
                 :color="assignment.status === 'pending' ? 'warning' : 'success'"
                 :icon="assignment.status === 'pending' ? 'i-lucide-clock' : 'i-lucide-check-circle'"
@@ -552,13 +749,13 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
             class="size-10 text-muted mb-2 mx-auto"
           />
           <p class="text-sm text-muted">
-            No staff assigned yet
+            Zatiaľ nie sú priradení žiadni zamestnanci
           </p>
         </div>
 
         <UButton
           v-if="can('procedures', 'assignStaff')"
-          label="Assign Staff"
+          label="Priradiť zamestnanca"
           icon="i-lucide-user-plus"
           color="neutral"
           @click="openAssignStaffModal"
@@ -568,8 +765,8 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
 
     <!-- Oral Exam Criteria -->
     <UPageCard
-      title="Oral Exam Criteria"
-      description="Select rating categories for oral exams. All criteria use a 1-5 rating scale."
+      title="Kritériá ústnej skúšky"
+      description="Vyberte hodnotiace kategórie pre ústne skúšky. Všetky kritériá používajú stupnicu 1-5."
     >
       <div class="space-y-4">
         <!-- Currently Selected Criteria -->
@@ -609,7 +806,7 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
             class="size-10 text-muted mb-2 mx-auto"
           />
           <p class="text-sm text-muted">
-            No exam criteria selected yet
+            Zatiaľ nie sú vybrané žiadne kritériá skúšky
           </p>
         </div>
 
@@ -618,20 +815,20 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
           v-if="availableOptions.length > 0 && can('evaluation', 'defineAbilities')"
           class="space-y-3"
         >
-          <UFormField label="Add Criteria">
+          <UFormField label="Pridať kritériá">
             <UInputMenu
               v-model="selectedCriteriaValues"
               :items="availableOptions"
               multiple
               searchable
-              placeholder="Select criteria to add..."
+              placeholder="Vyberte kritériá na pridanie..."
               value-key="value"
               label-key="label"
             />
           </UFormField>
 
           <UButton
-            label="Add Selected"
+            label="Pridať vybrané"
             icon="i-lucide-plus"
             color="neutral"
             :disabled="selectedCriteriaValues.length === 0"
@@ -643,15 +840,15 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
           v-else-if="examCriteria && examCriteria.length > 0"
           class="text-sm text-muted"
         >
-          All available criteria have been added.
+          Všetky dostupné kritériá boli pridané.
         </div>
       </div>
     </UPageCard>
 
     <!-- Written Exams & Surveys -->
     <UPageCard
-      title="Written Exams & Surveys"
-      description="Assign surveys to this procedure. Surveys are organized by category and displayed in strict order."
+      title="Písomné testy"
+      description="Priraďte testy k tomuto výberovému konaniu. Testy sú organizované podľa kategórie a zobrazené v prísnom poradí."
     >
       <div class="space-y-6">
         <!-- Assigned Surveys by Category -->
@@ -710,7 +907,7 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
                         v-if="!procedureSurvey.timeLimit && !procedureSurvey.totalPoints && !procedureSurvey.passingScore"
                         class="text-muted italic"
                       >
-                        No test conditions configured
+                        Nie sú nakonfigurované podmienky testu
                       </div>
                     </div>
                   </div>
@@ -748,7 +945,7 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
             class="size-10 text-muted mb-2 mx-auto"
           />
           <p class="text-sm text-muted">
-            No surveys assigned yet
+            Zatiaľ nie sú priradené žiadne testy
           </p>
         </div>
 
@@ -757,20 +954,20 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
           v-if="availableSurveys.length > 0 && can('procedures', 'manageTests')"
           class="space-y-3 pt-4 border-t border-default"
         >
-          <UFormField label="Add Surveys">
+          <UFormField label="Pridať testy">
             <UInputMenu
               v-model="selectedSurveyIds"
               :items="availableSurveys"
               multiple
               searchable
-              placeholder="Select surveys to add..."
+              placeholder="Vyberte testy na pridanie..."
               value-key="value"
               label-key="label"
             />
           </UFormField>
 
           <UButton
-            label="Add Selected"
+            label="Pridať vybrané"
             icon="i-lucide-plus"
             color="neutral"
             :disabled="selectedSurveyIds.length === 0"
@@ -782,28 +979,53 @@ async function removeStaffAssignment(assignmentId: number, userName: string) {
           v-else-if="procedureSurveys && procedureSurveys.length > 0"
           class="text-sm text-muted pt-4 border-t border-default"
         >
-          All available surveys have been assigned.
+          Všetky dostupné testy boli priradené.
         </div>
+      </div>
+    </UPageCard>
+
+    <!-- Evaluate and Submit -->
+    <UPageCard
+      v-if="can('procedures', 'finalize') && procedure?.status !== 'completed'"
+      title="Vyhodnotenie a uzavretie"
+      description="Vyhodnotiť výsledky a uzavrieť výberové konanie. Táto akcia je nezvratná."
+    >
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-sm font-medium text-highlighted">
+            Vyhodnotiť a odoslať
+          </h3>
+          <p class="text-sm text-muted mt-1">
+            Vyhodnotí všetky testy a ústne skúšky, vypočíta celkové skóre pre každého uchádzača a uzavrie výberové konanie. Po uzavretí nebude možné výberové konanie upravovať.
+          </p>
+        </div>
+        <UButton
+          label="Vyhodnotiť a uzavrieť"
+          color="primary"
+          size="lg"
+          :loading="isSubmitting"
+          @click="evaluateAndSubmit"
+        />
       </div>
     </UPageCard>
 
     <!-- Danger Zone -->
     <UPageCard
       v-if="can('procedures', 'delete')"
-      title="Danger Zone"
-      description="Irreversible actions that permanently affect this procedure."
+      title="Nebezpečná zóna"
+      description="Nezvratné akcie, ktoré natrvalo ovplyvnia toto výberové konanie."
     >
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-sm font-medium text-highlighted">
-            Delete Procedure
+            Odstrániť výberové konanie
           </h3>
           <p class="text-sm text-muted">
-            Permanently delete this procedure and all its contenders. This action cannot be undone.
+            Natrvalo odstrániť toto výberové konanie a všetkých jeho uchádzačov. Túto akciu nie je možné vrátiť späť.
           </p>
         </div>
         <UButton
-          label="Delete Procedure"
+          label="Odstrániť výberové konanie"
           color="error"
           variant="outline"
           @click="deleteProcedure"

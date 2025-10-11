@@ -23,7 +23,7 @@ function formatDuration(seconds: number | null): string {
 }
 
 function formatDate(date: string | null): string {
-  if (!date) return 'Not submitted'
+  if (!date) return 'Neodoslané'
   return new Date(date).toLocaleString('sk-SK', {
     year: 'numeric',
     month: 'short',
@@ -37,8 +37,8 @@ function formatDate(date: string | null): string {
 <template>
   <div>
     <UPageCard
-      title="Test Results"
-      description="View all test attempts with questions and answers."
+      title="Výsledky testov"
+      description="Zobrazenie všetkých pokusov o test s otázkami a odpoveďami."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
@@ -67,7 +67,7 @@ function formatDate(date: string | null): string {
                 />
                 <UBadge
                   v-if="result.isPassed !== null"
-                  :label="result.isPassed ? 'Passed' : 'Failed'"
+                  :label="result.isPassed ? 'Úspešný' : 'Neúspešný'"
                   :color="result.isPassed ? 'success' : 'error'"
                   variant="subtle"
                 />
@@ -87,17 +87,17 @@ function formatDate(date: string | null): string {
                 </span>
               </div>
               <div class="text-xs text-muted mt-1">
-                {{ result.correctAnswers }} / {{ result.totalQuestions }} correct
+                {{ result.correctAnswers }} / {{ result.totalQuestions }} správnych
               </div>
             </div>
           </div>
         </template>
 
         <!-- Test metadata -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 py-4 border-y border-default">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 py-3 border-y border-default">
           <div>
             <div class="text-xs text-muted">
-              Started
+              Začaté
             </div>
             <div class="text-sm font-medium text-highlighted">
               {{ formatDate(result.startedAt) }}
@@ -105,7 +105,7 @@ function formatDate(date: string | null): string {
           </div>
           <div>
             <div class="text-xs text-muted">
-              Submitted
+              Odoslané
             </div>
             <div class="text-sm font-medium text-highlighted">
               {{ formatDate(result.submittedAt) }}
@@ -113,7 +113,7 @@ function formatDate(date: string | null): string {
           </div>
           <div>
             <div class="text-xs text-muted">
-              Time Spent
+              Čas strávený
             </div>
             <div class="text-sm font-medium text-highlighted">
               {{ formatDuration(result.timeSpentSeconds) }}
@@ -122,15 +122,15 @@ function formatDate(date: string | null): string {
         </div>
 
         <!-- Questions and Answers -->
-        <div class="space-y-4 mt-6">
+        <div class="space-y-4 mt-4">
           <h4 class="text-sm font-semibold text-highlighted">
-            Questions & Answers
+            Otázky a odpovede
           </h4>
 
           <div
             v-for="(qa, index) in result.questionsWithAnswers"
             :key="qa.name"
-            class="p-4 rounded-lg border border-default"
+            class="p-3 rounded-lg border border-default"
             :class="{
               'bg-success/5 border-success/20': qa.isCorrect === true,
               'bg-error/5 border-error/20': qa.isCorrect === false,
@@ -140,23 +140,11 @@ function formatDate(date: string | null): string {
               <div class="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-elevated text-sm font-medium">
                 {{ index + 1 }}
               </div>
-              <div class="flex-1 space-y-3">
+              <div class="flex-1 space-y-2">
                 <!-- Question -->
                 <div>
-                  <div class="text-sm font-medium text-highlighted mb-2">
+                  <div class="text-sm font-medium text-highlighted">
                     {{ qa.title }}
-                  </div>
-                  <div
-                    v-if="qa.choices && qa.choices.length > 0"
-                    class="space-y-1"
-                  >
-                    <div
-                      v-for="choice in qa.choices"
-                      :key="choice.value"
-                      class="text-sm text-muted pl-4"
-                    >
-                      • {{ choice.text || choice.value }}
-                    </div>
                   </div>
                 </div>
 
@@ -174,7 +162,7 @@ function formatDate(date: string | null): string {
                   />
                   <div>
                     <div class="text-xs font-medium text-muted uppercase tracking-wide">
-                      User Answer
+                      Odpoveď uchádzača
                     </div>
                     <div class="text-sm font-medium text-highlighted mt-1">
                       <span v-if="qa.userAnswer !== undefined && qa.userAnswer !== null">
@@ -184,7 +172,7 @@ function formatDate(date: string | null): string {
                         v-else
                         class="italic text-muted"
                       >
-                        No answer provided
+                        Neodpovedal
                       </span>
                     </div>
                   </div>
@@ -201,7 +189,7 @@ function formatDate(date: string | null): string {
                   />
                   <div>
                     <div class="text-xs font-medium text-muted uppercase tracking-wide">
-                      Correct Answer
+                      Správna odpoveď
                     </div>
                     <div class="text-sm font-medium text-success mt-1">
                       {{ qa.correctAnswer }}
@@ -225,10 +213,10 @@ function formatDate(date: string | null): string {
           class="size-12 text-muted mb-4"
         />
         <p class="text-sm text-muted text-center">
-          No test results available yet.
+          Zatiaľ žiadne výsledky testov.
         </p>
         <p class="text-xs text-muted text-center mt-2">
-          Test results will appear here once the candidate completes their tests.
+          Výsledky testov sa zobrazia po dokončení testov uchádzačom.
         </p>
       </div>
     </UPageCard>

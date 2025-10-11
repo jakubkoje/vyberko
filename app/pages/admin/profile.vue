@@ -51,7 +51,7 @@ function terminateSession(sessionId: number) {
 <template>
   <UDashboardPanel id="profile">
     <template #header>
-      <UDashboardNavbar title="Profile">
+      <UDashboardNavbar title="Profil">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
@@ -62,8 +62,8 @@ function terminateSession(sessionId: number) {
       <div class="flex flex-col gap-6 w-full lg:max-w-2xl mx-auto p-4">
         <!-- Personal Information -->
         <UPageCard
-          title="Personal Information"
-          description="Your account details managed by Keycloak."
+          title="Osobné informácie"
+          description="Detaily vášho účtu spravované cez Keycloak."
         >
           <div class="space-y-4">
             <div class="flex items-center gap-4">
@@ -93,17 +93,17 @@ function terminateSession(sessionId: number) {
 
             <div class="space-y-2">
               <dt class="text-sm font-medium text-muted">
-                Authentication Provider
+                Poskytovateľ autentifikácie
               </dt>
               <dd class="text-sm text-highlighted">
-                {{ user?.authProvider === 'keycloak' ? 'Keycloak (SSO)' : 'Local' }}
+                {{ user?.authProvider === 'keycloak' ? 'Keycloak (SSO)' : 'Lokálne' }}
               </dd>
             </div>
           </div>
 
           <template #footer>
             <UButton
-              label="Manage Account in Keycloak"
+              label="Spravovať účet v Keycloak"
               icon="i-lucide-external-link"
               color="neutral"
               :to="getKeycloakAccountUrl()"
@@ -115,8 +115,8 @@ function terminateSession(sessionId: number) {
 
         <!-- Assigned Procedures -->
         <UPageCard
-          title="My Procedures"
-          description="Recruitment procedures you're assigned to."
+          title="Moje výberové konania"
+          description="Výberové konania, na ktorých ste priradený."
         >
           <div
             v-if="procedures && procedures.length > 0"
@@ -167,8 +167,8 @@ function terminateSession(sessionId: number) {
 
         <!-- Active Sessions -->
         <UPageCard
-          title="Active Sessions"
-          description="Manage your active login sessions across devices."
+          title="Aktívne relácie"
+          description="Spravujte svoje aktívne prihlásenia naprieč zariadeniami."
         >
           <div class="space-y-3">
             <div
@@ -186,7 +186,7 @@ function terminateSession(sessionId: number) {
                     {{ session.device }}
                     <UBadge
                       v-if="session.current"
-                      label="Current"
+                      label="Aktuálna"
                       variant="subtle"
                       color="success"
                       size="xs"
@@ -194,7 +194,7 @@ function terminateSession(sessionId: number) {
                     />
                   </p>
                   <p class="text-xs text-muted">
-                    {{ session.location }} • Last active {{ DateTime.fromJSDate(session.lastActive).toRelative() }}
+                    {{ session.location }} • Naposledy aktívne {{ DateTime.fromJSDate(session.lastActive).toRelative() }}
                   </p>
                 </div>
               </div>
@@ -214,29 +214,29 @@ function terminateSession(sessionId: number) {
               icon="i-lucide-info"
               color="info"
               variant="subtle"
-              title="Session Management"
-              description="Sessions are managed by Keycloak. For advanced session management, use the Keycloak account page."
+              title="Správa relácií"
+              description="Relácie sú spravované cez Keycloak. Pre pokročilú správu relácií použite stránku účtu Keycloak."
             />
           </template>
         </UPageCard>
 
         <!-- Security Actions -->
         <UPageCard
-          title="Security"
-          description="Manage your password and two-factor authentication."
+          title="Zabezpečenie"
+          description="Spravujte svoje heslo a dvojfaktorovú autentifikáciu."
         >
           <div class="space-y-3">
             <div class="flex items-center justify-between p-3 rounded-md border border-default">
               <div>
                 <p class="text-sm font-medium text-highlighted">
-                  Change Password
+                  Zmeniť heslo
                 </p>
                 <p class="text-xs text-muted">
-                  Update your password in Keycloak
+                  Aktualizujte svoje heslo v Keycloak
                 </p>
               </div>
               <UButton
-                label="Change"
+                label="Zmeniť"
                 icon="i-lucide-external-link"
                 color="neutral"
                 size="xs"
@@ -249,14 +249,14 @@ function terminateSession(sessionId: number) {
             <div class="flex items-center justify-between p-3 rounded-md border border-default">
               <div>
                 <p class="text-sm font-medium text-highlighted">
-                  Two-Factor Authentication
+                  Dvojfaktorová autentifikácia
                 </p>
                 <p class="text-xs text-muted">
-                  {{ user?.role === 'admin' ? 'Required for admin accounts' : 'Optional for your role' }}
+                  {{ user?.role === 'admin' ? 'Povinné pre administrátorské účty' : 'Voliteľné pre vašu rolu' }}
                 </p>
               </div>
               <UButton
-                label="Configure"
+                label="Nastaviť"
                 icon="i-lucide-external-link"
                 color="neutral"
                 size="xs"

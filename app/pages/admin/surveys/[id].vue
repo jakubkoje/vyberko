@@ -13,7 +13,7 @@
           <UButton
             v-if="currentSurveyId"
             icon="i-lucide-eye"
-            label="Preview"
+            label="Náhľad"
             color="neutral"
             variant="outline"
             @click="openPreview"
@@ -31,7 +31,7 @@
           <!-- Title Input -->
           <UInput
             v-model="surveyTitle"
-            placeholder="Enter survey title..."
+            placeholder="Zadajte názov testu..."
             size="lg"
             variant="outline"
             @blur="updateSurveyTitle"
@@ -41,13 +41,13 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <!-- Category & Procedure Info -->
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Category:</span>
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Kategória:</span>
               <UBadge color="primary" variant="subtle" size="sm">
                 {{ getCategoryLabel(selectedCategory) }}
               </UBadge>
               <template v-if="assignedProcedure">
                 <span class="text-gray-300 dark:text-gray-600">•</span>
-                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Procedure:</span>
+                <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Výberové konanie:</span>
                 <UButton
                   :label="assignedProcedure.title"
                   size="xs"
@@ -144,7 +144,7 @@ const creator = new SurveyCreatorModel(creatorOptions)
 
 const currentSurveyId = ref<number | null>(surveyId.value)
 const pageTitle = computed(() =>
-  currentSurveyId.value ? 'Edit Survey' : 'Create New Survey',
+  currentSurveyId.value ? 'Upraviť test' : 'Vytvoriť nový test',
 )
 
 // Load existing survey if editing
@@ -189,15 +189,15 @@ async function updateSurveyTitle() {
       },
     })
     toast.add({
-      title: 'Title updated',
+      title: 'Názov aktualizovaný',
       color: 'success',
     })
   }
   catch (error) {
     console.error('Failed to update title:', error)
     toast.add({
-      title: 'Update failed',
-      description: 'Failed to update survey title.',
+      title: 'Aktualizácia zlyhala',
+      description: 'Nepodarilo sa aktualizovať názov testu.',
       color: 'error',
     })
   }
@@ -208,8 +208,8 @@ creator.saveSurveyFunc = async (saveNo: number, callback: (saveNo: number, succe
   // Validate category is selected
   if (!selectedCategory.value) {
     toast.add({
-      title: 'Category required',
-      description: 'Please select a category before saving.',
+      title: 'Kategória je povinná',
+      description: 'Prosím vyberte kategóriu pred uložením.',
       color: 'error',
     })
     callback(saveNo, false)
@@ -217,7 +217,7 @@ creator.saveSurveyFunc = async (saveNo: number, callback: (saveNo: number, succe
   }
 
   // Sync title from input field if it exists, otherwise use creator JSON title
-  const titleToUse = surveyTitle.value || creator.JSON.title || 'Untitled Survey'
+  const titleToUse = surveyTitle.value || creator.JSON.title || 'Test bez názvu'
   surveyTitle.value = titleToUse
 
   // Update creator JSON title to match
@@ -257,8 +257,8 @@ creator.saveSurveyFunc = async (saveNo: number, callback: (saveNo: number, succe
   catch (error) {
     console.error('Failed to save survey:', error)
     toast.add({
-      title: 'Save failed',
-      description: 'Failed to save survey. Please try again.',
+      title: 'Uloženie zlyhalo',
+      description: 'Nepodarilo sa uložiť test. Prosím skúste znova.',
       color: 'error',
     })
     callback(saveNo, false)

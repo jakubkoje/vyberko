@@ -1,6 +1,6 @@
 {
-  "id": "77a0393f-28bb-4d43-8325-611c4797cc64",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "de3ebde8-4c4a-4964-9492-a727fd2d00d2",
+  "prevId": "77a0393f-28bb-4d43-8325-611c4797cc64",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1076,6 +1076,12 @@
         },
         "score": {
           "name": "score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_questions": {
+          "name": "total_questions",
           "type": "integer",
           "primaryKey": false,
           "notNull": false

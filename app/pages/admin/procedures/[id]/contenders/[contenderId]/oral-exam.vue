@@ -73,7 +73,7 @@ async function handleSubmit() {
     })
 
     toast.add({
-      title: 'Exam scores saved successfully',
+      title: 'Hodnotenie úspešne uložené',
       color: 'success',
     })
 
@@ -81,8 +81,8 @@ async function handleSubmit() {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to save exam scores',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa uložiť hodnotenie',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Nastala chyba',
       color: 'error',
     })
   }
@@ -95,8 +95,8 @@ async function handleSubmit() {
 <template>
   <div>
     <UPageCard
-      title="Oral Exam Evaluation"
-      description="Rate the contender on various criteria using a 1-5 scale."
+      title="Hodnotenie ústnej skúšky"
+      description="Ohodnoťte uchádzača podľa jednotlivých kritérií na škále 1-5."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
@@ -125,13 +125,13 @@ async function handleSubmit() {
               size="xs"
               trailing-icon="i-lucide-chevron-down"
             >
-              Example Questions
+              Príkladové otázky
             </UButton>
 
             <template #content>
               <div class="bg-subtle rounded-lg p-4 mt-2 space-y-2">
                 <p class="text-xs font-medium text-muted mb-3">
-                  Example questions to evaluate this criterion:
+                  Príkladové otázky na hodnotenie tohto kritéria:
                 </p>
                 <ul class="space-y-2">
                   <li
@@ -157,7 +157,7 @@ async function handleSubmit() {
 
         <div class="pt-4 border-t border-default">
           <UButton
-            label="Save Scores"
+            label="Uložiť hodnotenie"
             color="primary"
             :loading="isSubmitting"
             :disabled="isSubmitting"
@@ -175,10 +175,10 @@ async function handleSubmit() {
           class="size-12 text-muted mb-4"
         />
         <p class="text-sm text-muted text-center">
-          No exam criteria defined for this procedure yet.
+          Pre toto výberové konanie ešte nie sú definované kritériá hodnotenia.
         </p>
         <p class="text-xs text-muted text-center mt-2">
-          Go to procedure settings to add exam criteria.
+          Prejdite do nastavení výberového konania a pridajte kritériá hodnotenia.
         </p>
       </div>
     </UPageCard>

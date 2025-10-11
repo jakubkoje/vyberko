@@ -100,8 +100,8 @@ const score = computed(() => {
 <template>
   <div>
     <UPageCard
-      title="Written Exam Results"
-      description="View the contender's survey responses and performance."
+      title="Výsledky písomnej skúšky"
+      description="Zobrazenie odpovedí a výkonu uchádzača."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
@@ -118,10 +118,10 @@ const score = computed(() => {
           class="size-12 text-muted mb-4"
         />
         <p class="text-sm text-muted text-center">
-          No written exam (survey) assigned to this procedure yet.
+          K tomuto výberovému konaniu ešte nie je priradená písomná skúška (test).
         </p>
         <p class="text-xs text-muted text-center mt-2">
-          Go to procedure settings to assign a survey.
+          Prejdite do nastavení výberového konania a priraďte test.
         </p>
       </div>
     </UPageCard>
@@ -137,10 +137,10 @@ const score = computed(() => {
           class="size-12 text-muted mb-4"
         />
         <p class="text-sm text-muted text-center">
-          This contender hasn't completed the written exam yet.
+          Tento uchádzač ešte nedokončil písomnú skúšku.
         </p>
         <p class="text-xs text-muted text-center mt-2">
-          Share the exam access code with the contender to begin.
+          Zdieľajte prístupový kód s uchádzačom, aby mohol začať test.
         </p>
       </div>
     </UPageCard>
@@ -176,7 +176,7 @@ const score = computed(() => {
           class="mt-4 pt-4 border-t border-default"
         >
           <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-muted">Score</span>
+            <span class="text-sm font-medium text-muted">Skóre</span>
             <span class="text-lg font-bold text-primary">{{ score }}%</span>
           </div>
         </div>

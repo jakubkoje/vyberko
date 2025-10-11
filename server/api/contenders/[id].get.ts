@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
     .limit(1)
 
   if (procedure.length) {
-    await requireOrganizationAccess(event, procedure[0].organizationId, 'contenders', 'read')
+    await requireOrganizationAccess(event, procedure[0].organizationId, 'procedures', 'read')
   }
 
   return contender[0]

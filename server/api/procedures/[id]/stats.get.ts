@@ -90,6 +90,61 @@ export default defineEventHandler(async (event) => {
 
   const totalCriteria = Number(criteriaResult[0]?.count || 0)
 
+  // Get test results statistics
+  const testResponsesResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(tables.surveyResponses)
+    .where(eq(tables.surveyResponses.procedureId, Number(id)))
+
+  const totalResponses = Number(testResponsesResult[0]?.count || 0)
+
+  // Get completed tests count (submitted)
+  const completedResponsesResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(tables.surveyResponses)
+    .where(and(
+      eq(tables.surveyResponses.procedureId, Number(id)),
+      sql`${tables.surveyResponses.submittedAt} IS NOT NULL`,
+    ))
+
+  const completedResponses = Number(completedResponsesResult[0]?.count || 0)
+
+  // Get average score across all tests
+  const avgScoreResult = await db
+    .select({ avgScore: sql<number>`AVG(${tables.surveyResponses.score})` })
+    .from(tables.surveyResponses)
+    .where(and(
+      eq(tables.surveyResponses.procedureId, Number(id)),
+      sql`${tables.surveyResponses.score} IS NOT NULL`,
+    ))
+
+  const avgScore = Number(avgScoreResult[0]?.avgScore || 0)
+
+  // Get pass rate
+  const passedResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(tables.surveyResponses)
+    .where(and(
+      eq(tables.surveyResponses.procedureId, Number(id)),
+      eq(tables.surveyResponses.isPassed, 1),
+    ))
+
+  const passedCount = Number(passedResult[0]?.count || 0)
+  const passRate = completedResponses > 0 ? (passedCount / completedResponses) * 100 : 0
+
+  // Get test results by category
+  const resultsByCategory = await db
+    .select({
+      category: tables.surveys.category,
+      totalResponses: sql<number>`count(*)`,
+      avgScore: sql<number>`AVG(${tables.surveyResponses.score})`,
+      passedCount: sql<number>`SUM(CASE WHEN ${tables.surveyResponses.isPassed} = 1 THEN 1 ELSE 0 END)`,
+    })
+    .from(tables.surveyResponses)
+    .innerJoin(tables.surveys, eq(tables.surveyResponses.surveyId, tables.surveys.id))
+    .where(eq(tables.surveyResponses.procedureId, Number(id)))
+    .groupBy(tables.surveys.category)
+
   // Return statistics
   return {
     procedure: {
@@ -119,6 +174,21 @@ export default defineEventHandler(async (event) => {
     },
     evaluation: {
       criteriaCount: totalCriteria,
+    },
+    testResults: {
+      total: totalResponses,
+      completed: completedResponses,
+      avgScore: Math.round(avgScore * 100) / 100,
+      passRate: Math.round(passRate * 100) / 100,
+      byCategory: resultsByCategory.map(row => ({
+        category: row.category,
+        totalResponses: Number(row.totalResponses),
+        avgScore: Math.round(Number(row.avgScore || 0) * 100) / 100,
+        passedCount: Number(row.passedCount),
+        passRate: Number(row.totalResponses) > 0
+          ? Math.round((Number(row.passedCount) / Number(row.totalResponses)) * 100 * 100) / 100
+          : 0,
+      })),
     },
   }
 })

@@ -49,8 +49,8 @@ async function openEditModal() {
       })
 
       toast.add({
-        title: 'Changes saved',
-        description: 'Contender information has been updated.',
+        title: 'Zmeny uložené',
+        description: 'Informácie o uchádzačovi boli aktualizované.',
         color: 'success',
       })
 
@@ -58,8 +58,8 @@ async function openEditModal() {
     }
     catch (error) {
       toast.add({
-        title: 'Failed to save changes',
-        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        title: 'Nepodarilo sa uložiť zmeny',
+        description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
         color: 'error',
       })
     }
@@ -67,7 +67,7 @@ async function openEditModal() {
 }
 
 async function deleteContender() {
-  if (!confirm(`Are you sure you want to delete ${contender.value?.name}?`)) {
+  if (!confirm(`Naozaj chcete odstrániť ${contender.value?.name}?`)) {
     return
   }
 
@@ -77,8 +77,8 @@ async function deleteContender() {
     })
 
     toast.add({
-      title: 'Contender deleted',
-      description: 'The contender has been removed.',
+      title: 'Uchádzač odstránený',
+      description: 'Uchádzač bol odstránený.',
       color: 'success',
     })
 
@@ -86,8 +86,8 @@ async function deleteContender() {
   }
   catch (error) {
     toast.add({
-      title: 'Failed to delete contender',
-      description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+      title: 'Nepodarilo sa odstrániť uchádzača',
+      description: (error as { data?: { message?: string } })?.data?.message || 'Vyskytla sa chyba',
       color: 'error',
     })
   }
@@ -95,6 +95,27 @@ async function deleteContender() {
 
 const formatDate = (dateString: string | Date) => {
   return DateTime.fromISO(dateString.toString()).toLocaleString(DateTime.DATETIME_FULL)
+}
+
+async function copyAccessCode() {
+  if (!contender.value?.cisIdentifier)
+    return
+
+  try {
+    await navigator.clipboard.writeText(contender.value.cisIdentifier)
+    toast.add({
+      title: 'Skopírované!',
+      description: 'Prístupový kód bol skopírovaný do schránky',
+      color: 'success',
+    })
+  }
+  catch (error) {
+    toast.add({
+      title: 'Kopírovanie zlyhalo',
+      description: 'Nepodarilo sa skopírovať prístupový kód do schránky',
+      color: 'error',
+    })
+  }
 }
 </script>
 
@@ -105,11 +126,11 @@ const formatDate = (dateString: string | Date) => {
       <template #header>
         <div class="flex items-center justify-between">
           <h3 class="font-semibold">
-            Profile
+            Profil
           </h3>
           <UButton
             icon="i-lucide-pencil"
-            label="Edit"
+            label="Upraviť"
             color="neutral"
             variant="outline"
             size="xs"
@@ -148,14 +169,54 @@ const formatDate = (dateString: string | Date) => {
       </div>
     </UPageCard>
 
+    <!-- Access Code Card -->
+    <UPageCard
+      v-if="contender?.cisIdentifier"
+      variant="subtle"
+    >
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <div class="text-sm font-medium text-muted mb-1">
+            Prístupový kód k testu
+          </div>
+          <div class="flex items-center gap-3">
+            <code class="text-lg font-mono font-semibold text-primary bg-primary/10 px-3 py-1 rounded">
+              {{ contender.cisIdentifier }}
+            </code>
+            <UButton
+              icon="i-lucide-copy"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              @click="copyAccessCode"
+            />
+          </div>
+          <p class="text-xs text-muted mt-2">
+            Zdieľajte tento kód s uchádzačom, aby sa mohol pripojiť na test na adrese: <code class="text-xs">{{ $config.public.baseUrl || 'http://localhost:3000' }}/test?code={{ contender.cisIdentifier }}</code>
+          </p>
+        </div>
+      </div>
+    </UPageCard>
+
     <!-- Information Card -->
     <UPageCard
-      title="Information"
+      title="Informácie"
     >
       <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <dt class="text-sm font-medium text-muted">
-            Procedure
+            Identifikátor (prístupový kód)
+          </dt>
+          <dd class="mt-1 text-sm">
+            <code class="font-mono font-semibold text-highlighted bg-elevated px-2 py-0.5 rounded">
+              {{ contender?.cisIdentifier || 'N/A' }}
+            </code>
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-medium text-muted">
+            Výberové konanie
           </dt>
           <dd class="mt-1 text-sm text-highlighted">
             {{ procedure?.title }}
@@ -164,7 +225,7 @@ const formatDate = (dateString: string | Date) => {
 
         <div>
           <dt class="text-sm font-medium text-muted">
-            Status
+            Stav
           </dt>
           <dd class="mt-1">
             <UBadge
@@ -187,7 +248,7 @@ const formatDate = (dateString: string | Date) => {
 
         <div>
           <dt class="text-sm font-medium text-muted">
-            Phone
+            Telefón
           </dt>
           <dd class="mt-1 text-sm text-highlighted">
             {{ contender?.phone || 'N/A' }}
@@ -196,7 +257,7 @@ const formatDate = (dateString: string | Date) => {
 
         <div>
           <dt class="text-sm font-medium text-muted">
-            Created At
+            Vytvorené
           </dt>
           <dd class="mt-1 text-sm text-highlighted">
             {{ contender?.createdAt ? formatDate(contender.createdAt) : 'N/A' }}
@@ -205,7 +266,7 @@ const formatDate = (dateString: string | Date) => {
 
         <div>
           <dt class="text-sm font-medium text-muted">
-            Last Updated
+            Posledná aktualizácia
           </dt>
           <dd class="mt-1 text-sm text-highlighted">
             {{ contender?.updatedAt ? formatDate(contender.updatedAt) : 'N/A' }}
@@ -217,7 +278,7 @@ const formatDate = (dateString: string | Date) => {
           class="sm:col-span-2"
         >
           <dt class="text-sm font-medium text-muted">
-            Notes
+            Poznámky
           </dt>
           <dd class="mt-1 text-sm text-highlighted whitespace-pre-wrap">
             {{ contender.notes }}
@@ -228,20 +289,20 @@ const formatDate = (dateString: string | Date) => {
 
     <!-- Danger Zone -->
     <UPageCard
-      title="Danger Zone"
+      title="Nebezpečná zóna"
       :ui="{ body: 'space-y-4' }"
     >
       <div class="flex items-center justify-between">
         <div>
           <h3 class="text-sm font-medium text-highlighted">
-            Delete Contender
+            Odstrániť uchádzača
           </h3>
           <p class="text-sm text-muted">
-            Permanently remove this contender from the procedure.
+            Natrvalo odstrániť tohto uchádzača z výberového konania.
           </p>
         </div>
         <UButton
-          label="Delete"
+          label="Odstrániť"
           color="error"
           variant="outline"
           @click="deleteContender"

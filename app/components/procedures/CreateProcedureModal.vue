@@ -32,7 +32,7 @@ const emit = defineEmits<{
 const form = useTemplateRef('form')
 const toast = useToast()
 
-// CISSS URL state
+// CISŠS URL state
 const cisssUrl = ref('')
 const isLoading = ref(false)
 
@@ -40,34 +40,34 @@ const isLoading = ref(false)
 const schema = v.object({
   title: v.pipe(
     v.string(),
-    v.nonEmpty('Title is required'),
-    v.minLength(3, 'Title must be at least 3 characters'),
-    v.maxLength(200, 'Title must not exceed 200 characters'),
+    v.nonEmpty('Názov je povinný'),
+    v.minLength(3, 'Názov musí mať aspoň 3 znaky'),
+    v.maxLength(200, 'Názov nesmie presiahnuť 200 znakov'),
   ),
   description: v.optional(v.string()),
   status: v.pipe(
     v.string(),
-    v.nonEmpty('Status is required'),
+    v.nonEmpty('Stav je povinný'),
   ),
   procedureType: v.pipe(
     v.string(),
-    v.nonEmpty('Procedure type is required'),
+    v.nonEmpty('Typ výberového konania je povinný'),
   ),
   organizationalUnit: v.pipe(
     v.string(),
-    v.nonEmpty('Organizational unit is required'),
+    v.nonEmpty('Organizačná jednotka je povinná'),
   ),
   civilServiceSector: v.pipe(
     v.string(),
-    v.nonEmpty('Civil service sector is required'),
+    v.nonEmpty('Sektor štátnej služby je povinný'),
   ),
   positionTitle: v.pipe(
     v.string(),
-    v.nonEmpty('Position title is required'),
+    v.nonEmpty('Názov pozície je povinný'),
   ),
   serviceType: v.pipe(
     v.string(),
-    v.nonEmpty('Service type is required'),
+    v.nonEmpty('Typ služby je povinný'),
   ),
   procedureDate: v.pipe(
     v.any(),
@@ -75,16 +75,16 @@ const schema = v.object({
   ),
   numberOfPositions: v.pipe(
     v.number(),
-    v.minValue(1, 'Number of positions must be at least 1'),
+    v.minValue(1, 'Počet miest musí byť aspoň 1'),
   ),
 })
 
 type Schema = v.InferOutput<typeof schema>
 
 const statusOptions = [
-  { label: 'Active', value: 'active' },
-  { label: 'Draft', value: 'draft' },
-  { label: 'Closed', value: 'closed' },
+  { label: 'Aktívne', value: 'active' },
+  { label: 'Koncept', value: 'draft' },
+  { label: 'Uzavreté', value: 'closed' },
 ]
 
 const procedureTypeOptions = [
@@ -117,8 +117,8 @@ const state = reactive<Partial<Schema> & { testTypes?: string[], personalCharact
 async function loadFromCisss() {
   if (!cisssUrl.value) {
     toast.add({
-      title: 'URL Required',
-      description: 'Please enter a CISSS URL',
+      title: 'URL je povinné',
+      description: 'Prosím zadajte URL z CISŠS',
       color: 'red',
     })
     return
@@ -144,16 +144,16 @@ async function loadFromCisss() {
     state.personalCharacteristics = response.personalCharacteristics || []
 
     toast.add({
-      title: 'Success',
-      description: 'Form prefilled with CISSS data',
+      title: 'Úspech',
+      description: 'Formulár bol predvyplnený dátami z CISŠS',
       color: 'green',
     })
   }
   catch (error) {
-    console.error('Error loading from CISSS:', error)
+    console.error('Error loading from CISŠS:', error)
     toast.add({
-      title: 'Error',
-      description: 'Failed to load data from CISSS URL',
+      title: 'Chyba',
+      description: 'Nepodarilo sa načítať dáta z CISŠS URL',
       color: 'red',
     })
   }
@@ -184,20 +184,20 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end', body: 'max-h-[70vh] overflow-y-auto' }"
     :close="{ onClick: onCancel }"
-    title="Create Procedure"
+    title="Vytvoriť výberové konanie"
   >
     <template #body>
-      <!-- CISSS URL Section -->
+      <!-- CISŠS URL Section -->
       <div class="space-y-3 mb-6 p-4 bg-muted/30 rounded-lg border border-border">
-        <div class="text-sm font-semibold text-foreground">Import from CISSS</div>
+        <div class="text-sm font-semibold text-foreground">Importovať z CISŠS</div>
         <div class="flex gap-2">
           <UInput
             v-model="cisssUrl"
-            placeholder="Paste CISSS URL (e.g., https://cisss.gov.sk/vyberove-konania/detail/...)"
+            placeholder="Vložte URL z CISŠS (napr. https://cisss.gov.sk/vyberove-konania/detail/...)"
             class="flex-1"
           />
           <UButton
-            label="Load"
+            label="Načítať"
             :loading="isLoading"
             :disabled="!cisssUrl || isLoading"
             @click="loadFromCisss"
@@ -213,42 +213,42 @@ function onCancel() {
         @submit="onSubmit"
       >
         <div class="space-y-4">
-          <div class="text-sm font-semibold text-foreground">Basic Information</div>
+          <div class="text-sm font-semibold text-foreground">Základné informácie</div>
 
           <UFormField
-            label="Title"
+            label="Názov"
             name="title"
             required
           >
             <UInput
               v-model="state.title"
-              placeholder="e.g., Senior Software Engineer Position"
+              placeholder="napr. Pozícia hlavného štátneho radcu"
               class="w-full"
               autofocus
             />
           </UFormField>
 
           <UFormField
-            label="Description"
+            label="Popis"
             name="description"
           >
             <UTextarea
               v-model="state.description"
-              placeholder="Describe the recruitment procedure..."
+              placeholder="Opíšte výberové konanie..."
               class="w-full"
               :rows="3"
             />
           </UFormField>
 
           <UFormField
-            label="Status"
+            label="Stav"
             name="status"
             required
           >
             <USelect
               v-model="state.status"
               :items="statusOptions"
-              placeholder="Select status"
+              placeholder="Vyberte stav"
               class="w-full"
             />
           </UFormField>
@@ -257,72 +257,72 @@ function onCancel() {
         <UDivider />
 
         <div class="space-y-4">
-          <div class="text-sm font-semibold text-foreground">Procedure Header Information</div>
+          <div class="text-sm font-semibold text-foreground">Hlavička výberového konania</div>
 
           <UFormField
-            label="Procedure Type"
+            label="Typ výberového konania"
             name="procedureType"
             required
           >
             <USelect
               v-model="state.procedureType"
               :items="procedureTypeOptions"
-              placeholder="Select procedure type"
+              placeholder="Vyberte typ výberového konania"
               class="w-full"
             />
           </UFormField>
 
           <UFormField
-            label="Organizational Unit"
+            label="Organizačná jednotka"
             name="organizationalUnit"
             required
           >
             <UInput
               v-model="state.organizationalUnit"
-              placeholder="e.g., odbor implementácie OKP"
+              placeholder="napr. odbor implementácie OKP"
               class="w-full"
             />
           </UFormField>
 
           <UFormField
-            label="Civil Service Sector"
+            label="Sektor štátnej služby"
             name="civilServiceSector"
             required
           >
             <UInput
               v-model="state.civilServiceSector"
-              placeholder="e.g., 1.03 – Medzinárodná spolupráca"
+              placeholder="napr. 1.03 – Medzinárodná spolupráca"
               class="w-full"
             />
           </UFormField>
 
           <UFormField
-            label="Position Title"
+            label="Názov pozície"
             name="positionTitle"
             required
           >
             <UInput
               v-model="state.positionTitle"
-              placeholder="e.g., hlavný štátny radca"
+              placeholder="napr. hlavný štátny radca"
               class="w-full"
             />
           </UFormField>
 
           <UFormField
-            label="Service Type"
+            label="Typ služby"
             name="serviceType"
             required
           >
             <USelect
               v-model="state.serviceType"
               :items="serviceTypeOptions"
-              placeholder="Select service type"
+              placeholder="Vyberte typ služby"
               class="w-full"
             />
           </UFormField>
 
           <UFormField
-            label="Procedure Date"
+            label="Dátum konania"
             name="procedureDate"
           >
             <UInput
@@ -333,7 +333,7 @@ function onCancel() {
           </UFormField>
 
           <UFormField
-            label="Number of Positions"
+            label="Počet miest"
             name="numberOfPositions"
             required
           >
@@ -349,10 +349,10 @@ function onCancel() {
         <!-- Test Types and Personal Characteristics -->
         <div v-if="(state.testTypes && state.testTypes.length > 0) || (state.personalCharacteristics && state.personalCharacteristics.length > 0)" class="space-y-4">
           <UDivider />
-          <div class="text-sm font-semibold text-foreground">Imported Test Categories</div>
+          <div class="text-sm font-semibold text-foreground">Importované kategórie testov</div>
 
           <div v-if="state.testTypes && state.testTypes.length > 0" class="space-y-2">
-            <div class="text-sm text-muted-foreground">Written Test Categories:</div>
+            <div class="text-sm text-muted-foreground">Kategórie písomného testu:</div>
             <div class="flex flex-wrap gap-2">
               <span
                 v-for="(type, index) in state.testTypes"
@@ -365,7 +365,7 @@ function onCancel() {
           </div>
 
           <div v-if="state.personalCharacteristics && state.personalCharacteristics.length > 0" class="space-y-2">
-            <div class="text-sm text-muted-foreground">Oral Exam Categories (Personal Characteristics):</div>
+            <div class="text-sm text-muted-foreground">Kategórie ústnej skúšky (osobnostné vlastnosti):</div>
             <div class="flex flex-wrap gap-2">
               <span
                 v-for="(char, index) in state.personalCharacteristics"
@@ -384,11 +384,11 @@ function onCancel() {
       <UButton
         color="neutral"
         variant="ghost"
-        label="Cancel"
+        label="Zrušiť"
         @click="onCancel"
       />
       <UButton
-        label="Create Procedure"
+        label="Vytvoriť výberové konanie"
         @click="form?.submit()"
       />
     </template>

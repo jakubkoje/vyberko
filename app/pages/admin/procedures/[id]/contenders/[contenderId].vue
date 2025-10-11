@@ -6,22 +6,22 @@ const contenderId = computed(() => Number(route.params.contenderId))
 const { data: contender } = await useFetch(`/api/contenders/${contenderId.value}`)
 
 const tabs = [{
-  label: 'Overview',
+  label: 'Prehľad',
   icon: 'i-lucide-user',
   value: 'index',
   to: `/admin/procedures/${procedureId.value}/contenders/${contenderId.value}`,
 }, {
-  label: 'Test Results',
+  label: 'Výsledky testov',
   icon: 'i-lucide-check-square',
   value: 'test-results',
   to: `/admin/procedures/${procedureId.value}/contenders/${contenderId.value}/test-results`,
 }, {
-  label: 'Oral Exam',
+  label: 'Ústna skúška',
   icon: 'i-lucide-clipboard-list',
   value: 'oral-exam',
   to: `/admin/procedures/${procedureId.value}/contenders/${contenderId.value}/oral-exam`,
 }, {
-  label: 'Files',
+  label: 'Súbory',
   icon: 'i-lucide-file-text',
   value: 'files',
   to: `/admin/procedures/${procedureId.value}/contenders/${contenderId.value}/files`,
@@ -52,7 +52,7 @@ const selectedTab = computed({
         @click="navigateTo(`/admin/procedures/${procedureId}`)"
       />
       <h1 class="text-2xl font-bold text-highlighted">
-        {{ contender?.name || 'Contender' }}
+        {{ contender?.name || 'Uchádzač' }}
       </h1>
     </div>
 

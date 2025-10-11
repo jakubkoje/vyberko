@@ -29,15 +29,15 @@ const form = useTemplateRef('form')
 const schema = v.object({
   timeLimit: v.optional(v.nullable(v.pipe(
     v.number(),
-    v.minValue(1, 'Time limit must be at least 1 minute'),
+    v.minValue(1, 'Časový limit musí byť aspoň 1 minúta'),
   ))),
   totalPoints: v.optional(v.nullable(v.pipe(
     v.number(),
-    v.minValue(1, 'Total points must be at least 1'),
+    v.minValue(1, 'Celkový počet bodov musí byť aspoň 1'),
   ))),
   passingScore: v.optional(v.nullable(v.pipe(
     v.number(),
-    v.minValue(0, 'Passing score cannot be negative'),
+    v.minValue(0, 'Bodová hranica nemôže byť záporná'),
   ))),
 })
 
@@ -67,7 +67,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    :title="`Configure Test Conditions: ${surveyTitle}`"
+    :title="`Nastaviť podmienky testu: ${surveyTitle}`"
   >
     <template #body>
       <UForm
@@ -78,43 +78,43 @@ function onCancel() {
         @submit="onSubmit"
       >
         <UFormField
-          label="Time Limit (minutes)"
+          label="Časový limit (minúty)"
           name="timeLimit"
-          description="Maximum time allowed for completing this test"
+          description="Maximálny čas povolený na dokončenie tohto testu"
         >
           <UInput
             v-model.number="state.timeLimit"
             type="number"
             :min="1"
-            placeholder="e.g., 60"
+            placeholder="napr. 60"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Total Points"
+          label="Celkový počet bodov"
           name="totalPoints"
-          description="Total points available for this test"
+          description="Celkový počet bodov dostupných za tento test"
         >
           <UInput
             v-model.number="state.totalPoints"
             type="number"
             :min="1"
-            placeholder="e.g., 100"
+            placeholder="napr. 100"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Passing Score"
+          label="Bodová hranica"
           name="passingScore"
-          description="Minimum score required to pass"
+          description="Minimálne skóre potrebné na úspešné absolvovanie"
         >
           <UInput
             v-model.number="state.passingScore"
             type="number"
             :min="0"
-            placeholder="e.g., 60"
+            placeholder="napr. 60"
             class="w-full"
           />
         </UFormField>
@@ -125,11 +125,11 @@ function onCancel() {
       <UButton
         color="neutral"
         variant="ghost"
-        label="Cancel"
+        label="Zrušiť"
         @click="onCancel"
       />
       <UButton
-        label="Save Conditions"
+        label="Uložiť podmienky"
         @click="form?.submit()"
       />
     </template>

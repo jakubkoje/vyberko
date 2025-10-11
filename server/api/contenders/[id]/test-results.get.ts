@@ -72,9 +72,23 @@ export default defineEventHandler(async (event) => {
     // Match questions with answers
     const questionsWithAnswers = questions.map((question) => {
       const userAnswer = responseData[question.name]
-      const isCorrect = question.correctAnswer !== undefined
-        ? userAnswer === question.correctAnswer
-        : null
+      let isCorrect = null
+
+      if (question.correctAnswer !== undefined) {
+        // Handle checkbox (array) answers
+        if (Array.isArray(question.correctAnswer)) {
+          const correctAnswers = question.correctAnswer
+          const userAnswers = Array.isArray(userAnswer) ? userAnswer : []
+
+          // Check if arrays have same elements (order doesn't matter)
+          isCorrect = correctAnswers.length === userAnswers.length &&
+            correctAnswers.every((ans: string) => userAnswers.includes(ans))
+        }
+        else {
+          // Handle other types (string, number, etc.)
+          isCorrect = userAnswer === question.correctAnswer
+        }
+      }
 
       return {
         ...question,

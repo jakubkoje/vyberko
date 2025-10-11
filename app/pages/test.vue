@@ -38,8 +38,23 @@
         </template>
       </UAlert>
 
+      <!-- Transition Screen -->
+      <UCard v-else-if="isTransitioning && lastCompletedScore">
+        <div class="flex flex-col items-center justify-center py-12">
+          <UIcon name="i-lucide-check-circle" class="text-6xl text-success mb-4" />
+          <h2 class="text-2xl font-bold mb-2">Test úspešný!</h2>
+          <p class="text-muted mb-6">
+            Dosiahli ste požadovaný počet bodov.
+          </p>
+          <div class="flex items-center gap-2 text-primary">
+            <UIcon name="i-lucide-loader-2" class="animate-spin" />
+            <span>Načítavam ďalší test...</span>
+          </div>
+        </div>
+      </UCard>
+
       <!-- Test Content -->
-      <ClientOnly v-else-if="currentTest">
+      <ClientOnly v-else-if="currentTest && !isTransitioning">
         <div class="mb-6">
           <div class="flex justify-between items-center mb-4">
             <div>
@@ -75,6 +90,7 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const toast = useToast()
 const code = ref(route.query.code as string || '')
 const isCompleted = ref(false)
 const isLoading = ref(true)
@@ -85,6 +101,8 @@ const testResults = ref<any[]>([])
 const error = ref<string | null>(null)
 const startDate = ref<string | null>(null)
 const endDate = ref<string | null>(null)
+const isTransitioning = ref(false)
+const lastCompletedScore = ref<any>(null)
 
 const currentTest = computed(() => tests.value[currentTestIndex.value])
 const isLastTest = computed(() => currentTestIndex.value >= tests.value.length - 1)
@@ -110,31 +128,26 @@ const fetchTestConfiguration = async () => {
     tests.value = response.tests
     session.value = response.session
     currentTestIndex.value = session.value.currentTestIndex || 0
-    
-    // Use session dates for timer
-    if (session.value) {
-      startDate.value = session.value.startDate
-      endDate.value = session.value.endDate
-      
-      console.log('Using session dates:', {
-        start: startDate.value,
-        end: endDate.value,
-        currentTest: currentTestIndex.value
-      })
-    } else {
-      // Fallback: Calculate if not provided
+
+    // Set start date to now (each test has its own timer)
+    startDate.value = new Date().toISOString()
+
+    // Calculate end date for current test based on its timeLimit
+    if (currentTest.value?.timeLimit) {
       const now = new Date()
-      startDate.value = now.toISOString()
-      
-      const duration = 900 // 15 minutes total for all tests
-      const end = new Date(now.getTime() + duration * 1000)
+      const end = new Date(now.getTime() + currentTest.value.timeLimit * 1000)
       endDate.value = end.toISOString()
-      
-      console.log('Calculated dates (fallback):', {
-        start: startDate.value,
-        end: endDate.value
-      })
+    } else {
+      endDate.value = null
     }
+
+    console.log('Test timer configuration:', {
+      testIndex: currentTestIndex.value,
+      testTitle: currentTest.value?.title,
+      timeLimit: currentTest.value?.timeLimit,
+      start: startDate.value,
+      end: endDate.value
+    })
   } catch (e: any) {
     error.value = e.message || 'Nepodarilo sa načítať konfiguráciu testu'
     console.error('Failed to fetch test configuration:', e)
@@ -146,6 +159,30 @@ const fetchTestConfiguration = async () => {
 // Fetch configuration on mount
 onMounted(() => {
   fetchTestConfiguration()
+})
+
+// Update timer when test changes
+watch(currentTestIndex, () => {
+  if (currentTest.value) {
+    // Reset timer for new test
+    startDate.value = new Date().toISOString()
+
+    if (currentTest.value.timeLimit) {
+      const now = new Date()
+      const end = new Date(now.getTime() + currentTest.value.timeLimit * 1000)
+      endDate.value = end.toISOString()
+    } else {
+      endDate.value = null
+    }
+
+    console.log('Test timer updated:', {
+      testIndex: currentTestIndex.value,
+      testTitle: currentTest.value.title,
+      timeLimit: currentTest.value.timeLimit,
+      start: startDate.value,
+      end: endDate.value
+    })
+  }
 })
 
 // Calculate score based on correct answers
@@ -206,77 +243,158 @@ const calculateScore = (answers: any, testConfig: any) => {
 }
 
 // Handle individual test completion
-const handleTestComplete = (results: any) => {
-  console.log('Test completed:', results)
-  
+const handleTestComplete = async (answersData: any) => {
+  console.log('Test completed with answers:', answersData)
+
   // Calculate score for current test
-  const score = calculateScore(results.data, currentTest.value)
-  
-  // Store test result
+  const score = calculateScore(answersData, currentTest.value)
+  const isPassed = score.percentage >= 60
+
+  // Store test result (with pass/fail status only)
   const testResult = {
     testId: currentTest.value.id,
+    surveyId: currentTest.value.surveyId,
     testTitle: currentTest.value.title,
-    score,
-    data: results.data,
-    timestamp: new Date().toISOString()
+    isPassed,
+    timestamp: new Date().toISOString(),
   }
-  
+
   testResults.value.push(testResult)
-  
+
+  // Calculate time spent
+  const timeSpent = startDate.value
+    ? Math.floor((new Date().getTime() - new Date(startDate.value).getTime()) / 1000)
+    : null
+
+  // Submit test results to API
+  try {
+    await $fetch('/api/test/submit', {
+      method: 'POST',
+      body: {
+        code: code.value,
+        surveyId: currentTest.value.surveyId,
+        testId: currentTest.value.id,
+        answersData,
+        score: score.score,
+        totalQuestions: score.total,
+        isPassed,
+        timeSpent,
+        startedAt: startDate.value,
+      }
+    })
+    console.log('Test result saved to database')
+  } catch (err) {
+    console.error('Failed to save test result:', err)
+    toast.add({
+      title: 'Chyba pri ukladaní',
+      description: 'Nepodarilo sa uložiť výsledky testu. Skúste to prosím znova.',
+      color: 'red',
+      timeout: 5000,
+    })
+    return
+  }
+
+  // Check if passed
+  if (!isPassed) {
+    // Failed - show notification and block progression
+    toast.add({
+      title: 'Test neúspešný',
+      description: 'Nedosiahli ste požadovaný počet bodov. Výberové konanie pokračovať nemôže.',
+      color: 'red',
+      timeout: 0, // Don't auto-dismiss
+    })
+
+    // Store failed result and navigate to results
+    const finalResults = {
+      tests: testResults.value,
+      overall: {
+        passed: false
+      },
+      timestamp: new Date().toISOString(),
+      accessCode: code.value
+    }
+    localStorage.setItem(`test-results-${code.value}`, JSON.stringify(finalResults))
+
+    // Navigate to results after short delay
+    setTimeout(() => {
+      navigateTo(`/test-results?code=${code.value}`)
+    }, 2000)
+    return
+  }
+
+  // Passed - show success notification
+  toast.add({
+    title: 'Test úspešný!',
+    description: 'Dosiahli ste požadovaný počet bodov.',
+    color: 'green',
+    timeout: 3000,
+  })
+
   // Check if this is the last test
   if (isLastTest.value) {
     // All tests completed, navigate to results
     handleAllTestsComplete()
   } else {
-    // Move to next test
-    currentTestIndex.value++
-    
-    // Update session
-    if (session.value) {
-      session.value.currentTestIndex = currentTestIndex.value
-      session.value.completedTests.push(testResult.testId)
-    }
+    // Show transition screen
+    isTransitioning.value = true
+    lastCompletedScore.value = { isPassed: true }
+
+    // Move to next test after a short delay
+    setTimeout(() => {
+      currentTestIndex.value++
+
+      // Update session
+      if (session.value) {
+        session.value.currentTestIndex = currentTestIndex.value
+        session.value.completedTests.push(testResult.testId)
+      }
+
+      // Hide transition screen
+      isTransitioning.value = false
+      lastCompletedScore.value = null
+    }, 2500)
   }
 }
 
 // Handle completion of all tests
 const handleAllTestsComplete = () => {
   console.log('All tests completed:', testResults.value)
-  
-  // Calculate overall score
-  const totalScore = testResults.value.reduce((sum, result) => sum + result.score, 0)
-  const totalQuestions = testResults.value.reduce((sum, result) => sum + result.total, 0)
-  const overallPercentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0
-  
-  // Store all results in localStorage
+
+  // All tests passed if we got here (failures block earlier)
+  const allPassed = testResults.value.every(result => result.isPassed)
+
+  // Store only pass/fail status in localStorage
   const finalResults = {
-    tests: testResults.value,
+    tests: testResults.value, // Contains only testId, title, isPassed
     overall: {
-      score: totalScore,
-      total: totalQuestions,
-      percentage: Math.round(overallPercentage)
+      passed: allPassed
     },
     timestamp: new Date().toISOString(),
     accessCode: code.value
   }
-  
+
   localStorage.setItem(`test-results-${code.value}`, JSON.stringify(finalResults))
-  
+
   // Navigate to results page
   navigateTo(`/test-results?code=${code.value}`)
 }
 
 // Handle time expiration
-const handleTimeExpired = async (results: any) => {
+const handleTimeExpired = async (answersData: any) => {
   if (isCompleted.value) return // Prevent double submission
-  
-  console.log('Time expired! Auto-submitting...')
-  
-  // Show alert
-  alert('Čas vypršal! Test bude automaticky odoslaný.')
-  
+
+  console.log('Time expired! Auto-submitting...', answersData)
+
+  // Show notification
+  toast.add({
+    title: 'Čas vypršal!',
+    description: 'Test bol automaticky odoslaný.',
+    color: 'orange',
+    timeout: 5000,
+  })
+
   // Submit with current answers
-  await handleTestComplete(results)
+  await handleTestComplete(answersData)
 }
 
 useSeoMeta({

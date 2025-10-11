@@ -8,11 +8,11 @@ definePageMeta({
 })
 
 const items = [[{
-  label: 'Procedures',
+  label: 'Výberové konania',
   icon: 'i-lucide-briefcase',
   to: '/admin/procedures',
 }, {
-  label: 'Surveys',
+  label: 'Testy',
   icon: 'i-lucide-file-text',
   to: '/admin/surveys',
 }]] satisfies DropdownMenuItem[][]
@@ -22,7 +22,7 @@ const items = [[{
   <UDashboardPanel id="home">
     <template #header>
       <UDashboardNavbar
-        title="Home"
+        title="Domov"
         :ui="{ right: 'gap-3' }"
       >
         <template #leading>
@@ -34,10 +34,10 @@ const items = [[{
     <template #body>
       <div>
         <h1 class="text-2xl font-semibold">
-          Welcome to the admin dashboard of the platform <span class="text-4xl font-extrabold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">Vyberko</span>
+          Vitajte v administrátorskom rozhraní platformy <span class="text-4xl font-extrabold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">Vyberko</span>
         </h1>
         <p class="text-muted">
-          Use the sidebar to navigate to the different sections of the platform.
+          Použite bočný panel na navigáciu medzi jednotlivými sekciami platformy.
         </p>
       </div>
     </template>

@@ -18,22 +18,22 @@ function loginWithKeycloak() {
       <template #header>
         <div class="flex items-center justify-between">
           <h1 class="text-2xl font-bold">
-            Staff Login
+            Prihlásenie zamestnancov
           </h1>
         </div>
       </template>
 
       <div class="space-y-4">
         <p class="text-sm text-gray-600 dark:text-gray-400">
-          Staff members (Admin, Subject Experts, Commission Members) login through Keycloak with 2FA.
+          Zamestnanci (Admin, Veční gestori, Členovia komisie) sa prihlasujú cez Keycloak s 2FA.
         </p>
 
         <UAlert
           v-if="error"
           color="red"
           variant="soft"
-          title="Authentication Failed"
-          description="There was an error logging in with Keycloak. Please try again."
+          title="Prihlásenie zlyhalo"
+          description="Nastala chyba pri prihlasovaní cez Keycloak. Skúste to prosím znova."
           :close-button="{ icon: 'i-heroicons-x-mark-20-solid', color: 'red', variant: 'link' }"
         />
 
@@ -43,20 +43,20 @@ function loginWithKeycloak() {
           icon="i-heroicons-key"
           @click="loginWithKeycloak"
         >
-          Login with Keycloak
+          Prihlásiť sa cez Keycloak
         </UButton>
 
-        <UDivider label="OR" />
+        <UDivider label="ALEBO" />
 
         <div class="text-center">
           <p class="text-sm text-gray-600 dark:text-gray-400">
-            Are you a candidate?
+            Ste uchádzač?
           </p>
           <UButton
             variant="link"
             to="/auth/candidate-login"
           >
-            Candidate Login →
+            Prihlásenie uchádzačov →
           </UButton>
         </div>
       </div>

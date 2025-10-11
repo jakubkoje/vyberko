@@ -34,12 +34,12 @@ const user = computed(() => {
 const roleLabel = computed(() => {
   const roleMap: Record<string, string> = {
     admin: 'Admin',
-    subject_expert: 'Subject Expert',
-    commission_chair: 'Commission Chair',
-    commission_member: 'Commission Member',
-    candidate: 'Candidate',
+    subject_expert: 'Vecný gestor',
+    commission_chair: 'Predseda komisie',
+    commission_member: 'Člen komisie',
+    candidate: 'Uchádzač',
   }
-  return sessionUser.value?.role ? roleMap[sessionUser.value.role] : 'Unknown'
+  return sessionUser.value?.role ? roleMap[sessionUser.value.role] : 'Neznáme'
 })
 
 async function handleLogout() {
@@ -48,14 +48,14 @@ async function handleLogout() {
     await clear()
     await navigateTo('/auth/staff-login')
     toast.add({
-      title: 'Logged out successfully',
+      title: 'Úspešne odhlásený',
       color: 'green',
     })
   }
   catch (error) {
     toast.add({
-      title: 'Logout failed',
-      description: 'Please try again',
+      title: 'Odhlásenie zlyhalo',
+      description: 'Skúste to prosím znova',
       color: 'red',
     })
   }
@@ -67,14 +67,14 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
   avatar: user.value.avatar,
   description: roleLabel.value,
 }], [{
-  label: 'Profile',
+  label: 'Profil',
   icon: 'i-lucide-user',
   to: '/admin/profile',
 }], [{
-  label: 'Appearance',
+  label: 'Vzhľad',
   icon: 'i-lucide-sun-moon',
   children: [{
-    label: 'Light',
+    label: 'Svetlý',
     icon: 'i-lucide-sun',
     type: 'checkbox',
     checked: colorMode.value === 'light',
@@ -83,7 +83,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
       colorMode.preference = 'light'
     },
   }, {
-    label: 'Dark',
+    label: 'Tmavý',
     icon: 'i-lucide-moon',
     type: 'checkbox',
     checked: colorMode.value === 'dark',
@@ -93,7 +93,7 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     },
   }],
 }], [{
-  label: 'Log out',
+  label: 'Odhlásiť sa',
   icon: 'i-lucide-log-out',
   onSelect: handleLogout,
 }]]))

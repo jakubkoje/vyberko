@@ -52,7 +52,13 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
+    console.log('Fetching CISSS URL:', url)
     const response = await fetch(url)
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
     const text = await response.text()
 
     const $ = cheerio.load(text)
@@ -89,20 +95,50 @@ export default defineEventHandler(async (event) => {
 
     const result: Record<string, Value> = {}
 
+    // Log all found labels for debugging
+    console.log('Found labels:', labelValuePairs.map(p => p.label))
+
     labelValuePairs.forEach(({ label, value }) => {
       Object.keys(rules).forEach((key) => {
-        if (rules[key]!.label === label) {
+        // Case-insensitive and flexible matching
+        const ruleLabel = rules[key]!.label.toLowerCase().trim()
+        const foundLabel = label.toLowerCase().trim()
+
+        if (foundLabel === ruleLabel || foundLabel.includes(ruleLabel) || ruleLabel.includes(foundLabel)) {
           const transformedValue = rules[key]!.transform
             ? rules[key]!.transform!(value)
             : value
 
           result[key] = transformedValue
+          console.log(`Matched "${label}" to key "${key}":`, transformedValue)
         }
       })
     })
 
+    // Log what was parsed
+    console.log('Parsed result:', {
+      hasTestTypes: !!result.testTypes,
+      testTypesLength: Array.isArray(result.testTypes) ? result.testTypes.length : 0,
+      hasPersonalCharacteristics: !!result.personalCharacteristics,
+      personalCharacteristicsLength: Array.isArray(result.personalCharacteristics) ? result.personalCharacteristics.length : 0,
+    })
+
+    // Validate we got the essential fields
+    if (!result.id) {
+      console.error('Missing identifier in parsed data!')
+    }
+    if (!result.position) {
+      console.error('Missing position title in parsed data!')
+    }
+    if (!result.testTypes || (Array.isArray(result.testTypes) && result.testTypes.length === 0)) {
+      console.warn('No test types found - check if "Formy overenia - písomná časť výberového konania" label exists on page')
+    }
+    if (!result.personalCharacteristics || (Array.isArray(result.personalCharacteristics) && result.personalCharacteristics.length === 0)) {
+      console.warn('No personal characteristics found - check if "Požadované schopnosti a osobnostné vlastnosti" label exists on page')
+    }
+
     // Map to procedure fields
-    return {
+    const mappedData = {
       identifier: result.id as string,
       title: result.position as string,
       procedureType: result.type as string,
@@ -114,6 +150,10 @@ export default defineEventHandler(async (event) => {
       testTypes: result.testTypes as string[] || [],
       personalCharacteristics: result.personalCharacteristics as string[] || [],
     }
+
+    console.log('Returning mapped data with', mappedData.testTypes.length, 'test types and', mappedData.personalCharacteristics.length, 'characteristics')
+
+    return mappedData
   }
   catch (error) {
     console.error('Error parsing CISSS URL:', error)

@@ -2,7 +2,7 @@
   <UDashboardPanel id="procedures">
     <template #header>
       <UDashboardNavbar
-        title="Recruitment Procedures"
+        title="Výberové konania"
         :ui="{ right: 'gap-3' }"
       >
         <template #leading>
@@ -14,9 +14,16 @@
           #right
         >
           <UButton
+            icon="i-lucide-download"
+            size="md"
+            label="Import z CISŠS"
+            variant="outline"
+            @click="openCisssImport"
+          />
+          <UButton
             icon="i-lucide-plus"
             size="md"
-            label="New Procedure"
+            label="Nové výberové konanie"
             @click="createProcedure"
           />
         </template>
@@ -29,7 +36,7 @@
           :model-value="(table?.tableApi?.getColumn('title')?.getFilterValue() as string)"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Search procedures..."
+          placeholder="Hľadať výberové konania..."
           @update:model-value="table?.tableApi?.getColumn('title')?.setFilterValue($event)"
         />
       </div>
@@ -47,8 +54,8 @@
         :loading="status === 'pending'"
         :empty-state="{
           icon: 'i-lucide-briefcase',
-          label: 'No procedures found',
-          description: 'Create your first recruitment procedure to get started',
+          label: 'Žiadne výberové konania',
+          description: 'Vytvorte vaše prvé výberové konanie',
         }"
         :ui="{
           base: 'table-fixed border-separate border-spacing-0',
@@ -61,7 +68,7 @@
 
       <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
         <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} procedure(s) found.
+          Nájdených {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} výberových konaní.
         </div>
 
         <div class="flex items-center gap-1.5">
@@ -82,7 +89,7 @@ import type { TableColumn } from '@nuxt/ui'
 import { DateTime } from 'luxon'
 import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
-import { LazyProceduresCreateProcedureModal } from '#components'
+import { LazyProceduresCreateProcedureModal, LazyProceduresCisssImportModal } from '#components'
 
 const UIcon = resolveComponent('UIcon')
 const UButton = resolveComponent('UButton')
@@ -127,17 +134,17 @@ function getRowItems(row: Row<Procedure>) {
   return [
     {
       type: 'label',
-      label: 'Actions',
+      label: 'Akcie',
     },
     {
-      label: 'View details',
+      label: 'Zobraziť detaily',
       icon: 'i-lucide-eye',
       onSelect() {
         navigateTo(`/admin/procedures/${row.original.id}`)
       },
     },
     {
-      label: 'Edit procedure',
+      label: 'Upraviť výberové konanie',
       icon: 'i-lucide-pencil',
       onSelect() {
         // TODO: Implement edit modal
@@ -148,24 +155,24 @@ function getRowItems(row: Row<Procedure>) {
       type: 'separator',
     },
     {
-      label: 'Delete procedure',
+      label: 'Odstrániť výberové konanie',
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
-        if (confirm(`Are you sure you want to delete "${row.original.title}"?`)) {
+        if (confirm(`Naozaj chcete odstrániť "${row.original.title}"?`)) {
           try {
             await $fetch(`/api/procedures/${row.original.id}`, { method: 'DELETE' })
             await refresh()
             toast.add({
-              title: 'Procedure deleted',
-              description: 'The procedure has been deleted.',
+              title: 'Výberové konanie odstránené',
+              description: 'Výberové konanie bolo úspešne odstránené.',
             })
           }
           catch (error) {
             console.error('Failed to delete procedure:', error)
             toast.add({
-              title: 'Error',
-              description: 'Failed to delete procedure.',
+              title: 'Chyba',
+              description: 'Nepodarilo sa odstrániť výberové konanie.',
               color: 'error',
             })
           }
@@ -180,6 +187,26 @@ const formatDate = (dateString: string) => {
 }
 
 const modal = overlay.create(LazyProceduresCreateProcedureModal)
+const cisssImportModal = overlay.create(LazyProceduresCisssImportModal)
+
+async function openCisssImport() {
+  const instance = cisssImportModal.open()
+
+  const result: {
+    imported: boolean
+    count: number
+  } = await instance.result
+
+  if (result.imported) {
+    toast.add({
+      title: 'Import successful',
+      description: `${result.count} procedure(s) imported from CISŠS`,
+      color: 'success',
+    })
+
+    refresh()
+  }
+}
 
 async function createProcedure() {
   const instance = modal.open({
@@ -199,7 +226,7 @@ async function createProcedure() {
       })
 
       toast.add({
-        title: 'Procedure created successfully',
+        title: 'Výberové konanie bolo úspešne vytvorené',
         color: 'success',
       })
 
@@ -210,8 +237,8 @@ async function createProcedure() {
     }
     catch (error) {
       toast.add({
-        title: 'Failed to create procedure',
-        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        title: 'Nepodarilo sa vytvoriť výberové konanie',
+        description: (error as { data?: { message?: string } })?.data?.message || 'Nastala chyba',
         color: 'error',
       })
     }
@@ -231,7 +258,7 @@ const columns: TableColumn<Procedure>[] = [
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Title',
+        label: 'Názov',
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'
@@ -253,7 +280,7 @@ const columns: TableColumn<Procedure>[] = [
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'Stav',
     cell: ({ row }) => {
       return h(UBadge, {
         label: row.original.status,
@@ -264,7 +291,7 @@ const columns: TableColumn<Procedure>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created',
+    header: 'Vytvorené',
     cell: ({ row }) => {
       return h('span', { class: 'text-sm text-neutral-500' }, formatDate(row.original.createdAt))
     },
@@ -277,7 +304,7 @@ const columns: TableColumn<Procedure>[] = [
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Last Updated',
+        label: 'Posledná aktualizácia',
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'

@@ -2,7 +2,7 @@
   <UDashboardPanel id="surveys">
     <template #header>
       <UDashboardNavbar
-        title="Surveys"
+        title="Testy"
         :ui="{ right: 'gap-3' }"
       >
         <template #leading>
@@ -16,7 +16,7 @@
           <UButton
             icon="i-lucide-plus"
             size="md"
-            label="Create Survey"
+            label="Vytvoriť test"
             @click="createSurvey"
           />
         </template>
@@ -29,7 +29,7 @@
           :model-value="(table?.tableApi?.getColumn('title')?.getFilterValue() as string)"
           class="max-w-sm"
           icon="i-lucide-search"
-          placeholder="Search surveys..."
+          placeholder="Hľadať testy..."
           @update:model-value="table?.tableApi?.getColumn('title')?.setFilterValue($event)"
         />
       </div>
@@ -47,8 +47,8 @@
         :loading="status === 'pending'"
         :empty-state="{
           icon: 'i-lucide-file-question',
-          label: 'No surveys found',
-          description: 'Create your first survey to get started',
+          label: 'Žiadne testy',
+          description: 'Vytvorte váš prvý test',
         }"
         :ui="{
           base: 'table-fixed border-separate border-spacing-0',
@@ -61,7 +61,7 @@
 
       <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
         <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} survey(s) found.
+          Nájdených {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} testov.
         </div>
 
         <div class="flex items-center gap-1.5">
@@ -141,7 +141,7 @@ async function createSurvey() {
       })
 
       toast.add({
-        title: 'Survey created successfully',
+        title: 'Test bol úspešne vytvorený',
         color: 'success',
       })
 
@@ -152,8 +152,8 @@ async function createSurvey() {
     }
     catch (error) {
       toast.add({
-        title: 'Failed to create survey',
-        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        title: 'Nepodarilo sa vytvoriť test',
+        description: (error as { data?: { message?: string } })?.data?.message || 'Nastala chyba',
         color: 'error',
       })
     }
@@ -164,14 +164,14 @@ function getRowItems(row: Row<Survey>) {
   const items: any[] = [
     {
       type: 'label',
-      label: 'Actions',
+      label: 'Akcie',
     },
   ]
 
   // Edit - admin and gestor can edit
   if (can('surveys', 'update')) {
     items.push({
-      label: 'Edit survey',
+      label: 'Upraviť test',
       icon: 'i-lucide-pencil',
       onSelect() {
         navigateTo(`/admin/surveys/${row.original.id}`)
@@ -181,7 +181,7 @@ function getRowItems(row: Row<Survey>) {
 
   // Preview - everyone can preview
   items.push({
-    label: 'Preview survey',
+    label: 'Náhľad testu',
     icon: 'i-lucide-eye',
     onSelect() {
       // TODO: Implement preview
@@ -192,7 +192,7 @@ function getRowItems(row: Row<Survey>) {
   // Duplicate - admin and gestor can duplicate
   if (can('surveys', 'duplicate')) {
     items.push({
-      label: 'Duplicate survey',
+      label: 'Duplikovať test',
       icon: 'i-lucide-copy',
       async onSelect() {
         try {
@@ -200,14 +200,14 @@ function getRowItems(row: Row<Survey>) {
             method: 'POST',
             body: {
               jsonData: row.original.jsonData,
-              title: `${row.original.title} (Copy)`,
+              title: `${row.original.title} (Kópia)`,
               category: row.original.category,
             },
           })
           await refresh()
           toast.add({
-            title: 'Survey duplicated',
-            description: 'The survey has been duplicated.',
+            title: 'Test bol duplikovaný',
+            description: 'Test bol úspešne duplikovaný.',
             color: 'success',
           })
           navigateTo(`/admin/surveys/${newSurvey.id}`)
@@ -215,8 +215,8 @@ function getRowItems(row: Row<Survey>) {
         catch (error) {
           console.error('Failed to duplicate survey:', error)
           toast.add({
-            title: 'Error',
-            description: 'Failed to duplicate survey.',
+            title: 'Chyba',
+            description: 'Nepodarilo sa duplikovať test.',
             color: 'error',
           })
         }
@@ -230,22 +230,22 @@ function getRowItems(row: Row<Survey>) {
       type: 'separator',
     })
     items.push({
-      label: 'Submit for Approval',
+      label: 'Odoslať na schválenie',
       icon: 'i-lucide-send',
       async onSelect() {
         try {
           await $fetch(`/api/surveys/${row.original.id}/submit-for-approval`, { method: 'POST' })
           await refresh()
           toast.add({
-            title: 'Survey submitted for approval',
+            title: 'Test bol odoslaný na schválenie',
             color: 'success',
           })
         }
         catch (error) {
           console.error('Failed to submit survey:', error)
           toast.add({
-            title: 'Error',
-            description: 'Failed to submit survey for approval.',
+            title: 'Chyba',
+            description: 'Nepodarilo sa odoslať test na schválenie.',
             color: 'error',
           })
         }
@@ -259,7 +259,7 @@ function getRowItems(row: Row<Survey>) {
       type: 'separator',
     })
     items.push({
-      label: 'Approve Survey',
+      label: 'Schváliť test',
       icon: 'i-lucide-check-circle',
       color: 'success',
       async onSelect() {
@@ -267,26 +267,26 @@ function getRowItems(row: Row<Survey>) {
           await $fetch(`/api/surveys/${row.original.id}/approve`, { method: 'POST' })
           await refresh()
           toast.add({
-            title: 'Survey approved',
+            title: 'Test bol schválený',
             color: 'success',
           })
         }
         catch (error) {
           console.error('Failed to approve survey:', error)
           toast.add({
-            title: 'Error',
-            description: 'Failed to approve survey.',
+            title: 'Chyba',
+            description: 'Nepodarilo sa schváliť test.',
             color: 'error',
           })
         }
       },
     })
     items.push({
-      label: 'Reject Survey',
+      label: 'Zamietnuť test',
       icon: 'i-lucide-x-circle',
       color: 'error',
       async onSelect() {
-        const reason = prompt('Please provide a reason for rejection:')
+        const reason = prompt('Prosím zadajte dôvod zamietnutia:')
         if (!reason) return
 
         try {
@@ -296,15 +296,15 @@ function getRowItems(row: Row<Survey>) {
           })
           await refresh()
           toast.add({
-            title: 'Survey rejected',
+            title: 'Test bol zamietnutý',
             color: 'warning',
           })
         }
         catch (error) {
           console.error('Failed to reject survey:', error)
           toast.add({
-            title: 'Error',
-            description: 'Failed to reject survey.',
+            title: 'Chyba',
+            description: 'Nepodarilo sa zamietnuť test.',
             color: 'error',
           })
         }
@@ -318,24 +318,24 @@ function getRowItems(row: Row<Survey>) {
       type: 'separator',
     })
     items.push({
-      label: 'Delete survey',
+      label: 'Odstrániť test',
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
-        if (confirm(`Are you sure you want to delete "${row.original.title}"?`)) {
+        if (confirm(`Naozaj chcete odstrániť "${row.original.title}"?`)) {
           try{
             await $fetch(`/api/surveys/${row.original.id}`, { method: 'DELETE' })
             await refresh()
             toast.add({
-              title: 'Survey deleted',
-              description: 'The survey has been deleted.',
+              title: 'Test bol odstránený',
+              description: 'Test bol úspešne odstránený.',
             })
           }
           catch (error) {
             console.error('Failed to delete survey:', error)
             toast.add({
-              title: 'Error',
-              description: 'Failed to delete survey.',
+              title: 'Chyba',
+              description: 'Nepodarilo sa odstrániť test.',
               color: 'error',
             })
           }
@@ -364,7 +364,7 @@ const columns: TableColumn<Survey>[] = [
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Title',
+        label: 'Názov',
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'
@@ -386,25 +386,25 @@ const columns: TableColumn<Survey>[] = [
   },
   {
     accessorKey: 'category',
-    header: 'Category',
+    header: 'Kategória',
     cell: ({ row }) => {
       return h('span', { class: 'text-sm' }, getCategoryLabel(row.original.category))
     },
   },
   {
     accessorKey: 'procedure',
-    header: 'Procedure',
+    header: 'Výberové konanie',
     cell: ({ row }) => {
       const procedure = row.original.procedureSurvey?.procedure
       if (!procedure) {
-        return h('span', { class: 'text-sm text-muted italic' }, 'Not assigned')
+        return h('span', { class: 'text-sm text-muted italic' }, 'Nepriradené')
       }
       return h('span', { class: 'text-sm' }, procedure.title)
     },
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: 'Stav',
     cell: ({ row }) => {
       const UBadge = resolveComponent('UBadge')
       const statusColors: Record<string, string> = {
@@ -414,10 +414,10 @@ const columns: TableColumn<Survey>[] = [
         rejected: 'error',
       }
       const statusLabels: Record<string, string> = {
-        draft: 'Draft',
-        pending_approval: 'Pending Approval',
-        approved: 'Approved',
-        rejected: 'Rejected',
+        draft: 'Koncept',
+        pending_approval: 'Čaká na schválenie',
+        approved: 'Schválený',
+        rejected: 'Zamietnutý',
       }
       return h(UBadge, {
         label: statusLabels[row.original.status] || row.original.status,
@@ -428,7 +428,7 @@ const columns: TableColumn<Survey>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created',
+    header: 'Vytvorené',
     cell: ({ row }) => {
       return h('span', { class: 'text-sm text-neutral-500' }, formatDate(row.original.createdAt))
     },
@@ -441,7 +441,7 @@ const columns: TableColumn<Survey>[] = [
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Last Updated',
+        label: 'Posledná aktualizácia',
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'

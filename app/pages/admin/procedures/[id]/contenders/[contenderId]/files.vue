@@ -44,10 +44,10 @@ function getRowItems(row: Row<ContenderFile>) {
   return [
     {
       type: 'label',
-      label: 'Actions',
+      label: 'Akcie',
     },
     {
-      label: 'Download',
+      label: 'Stiahnuť',
       icon: 'i-lucide-download',
       onSelect() {
         // Use download endpoint which proxies authenticated MinIO request
@@ -55,12 +55,12 @@ function getRowItems(row: Row<ContenderFile>) {
       },
     },
     {
-      label: 'View in SharePoint',
+      label: 'Otvoriť v SharePoint',
       icon: 'i-lucide-external-link',
       onSelect() {
         toast.add({
-          title: 'SharePoint integration coming soon',
-          description: 'This will open the file in SharePoint once integration is complete.',
+          title: 'SharePoint integrácia pripravovaná',
+          description: 'Toto otvorí súbor v SharePoint po dokončení integrácie.',
         })
       },
     },
@@ -68,24 +68,24 @@ function getRowItems(row: Row<ContenderFile>) {
       type: 'separator',
     },
     {
-      label: 'Delete file',
+      label: 'Odstrániť súbor',
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
-        if (confirm(`Are you sure you want to delete "${row.original.fileName}"?`)) {
+        if (confirm(`Naozaj chcete odstrániť súbor "${row.original.fileName}"?`)) {
           try {
             await $fetch(`/api/contender-files/${row.original.id}`, { method: 'DELETE' })
             await refreshFiles()
             toast.add({
-              title: 'File deleted',
-              description: 'The file has been deleted.',
+              title: 'Súbor odstránený',
+              description: 'Súbor bol úspešne odstránený.',
             })
           }
           catch (error) {
             console.error('Failed to delete file:', error)
             toast.add({
-              title: 'Error',
-              description: 'Failed to delete file.',
+              title: 'Chyba',
+              description: 'Nepodarilo sa odstrániť súbor.',
               color: 'error',
             })
           }
@@ -120,8 +120,8 @@ async function handleFileUpload(event: Event) {
     })
 
     toast.add({
-      title: 'File uploaded',
-      description: `${file.name} has been uploaded successfully.`,
+      title: 'Súbor nahratý',
+      description: `${file.name} bol úspešne nahraný.`,
       color: 'success',
     })
 
@@ -135,8 +135,8 @@ async function handleFileUpload(event: Event) {
   catch (error) {
     console.error('Failed to upload file:', error)
     toast.add({
-      title: 'Upload failed',
-      description: 'Failed to upload file. Please try again.',
+      title: 'Nahratie zlyhalo',
+      description: 'Nepodarilo sa nahrať súbor. Skúste to prosím znova.',
       color: 'error',
     })
   }
@@ -148,7 +148,7 @@ async function handleFileUpload(event: Event) {
 const columns: TableColumn<ContenderFile>[] = [
   {
     accessorKey: 'fileName',
-    header: 'File Name',
+    header: 'Názov súboru',
     cell: ({ row }) => {
       return h('div', { class: 'flex items-center gap-2' }, [
         h(UIcon, {
@@ -161,7 +161,7 @@ const columns: TableColumn<ContenderFile>[] = [
   },
   {
     accessorKey: 'fileSize',
-    header: 'Size',
+    header: 'Veľkosť',
     cell: ({ row }) => {
       return h('span', { class: 'text-sm text-neutral-500' }, formatFileSize(row.original.fileSize))
     },
@@ -174,7 +174,7 @@ const columns: TableColumn<ContenderFile>[] = [
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
-        label: 'Uploaded',
+        label: 'Nahraté',
         icon: isSorted
           ? isSorted === 'asc'
             ? 'i-lucide-arrow-up-narrow-wide'
@@ -236,8 +236,8 @@ const pagination = ref({
 <template>
   <div class="space-y-6">
     <UPageCard
-      title="Submitted Files"
-      description="Documents and files submitted by the contender. Files are stored in MinIO S3."
+      title="Odoslané súbory"
+      description="Dokumenty a súbory odoslané uchádzačom. Súbory sú uložené v MinIO S3."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
@@ -249,7 +249,7 @@ const pagination = ref({
         @change="handleFileUpload"
       >
       <UButton
-        :label="isUploading ? 'Uploading...' : 'Upload File'"
+        :label="isUploading ? 'Nahráva sa...' : 'Nahrať súbor'"
         :loading="isUploading"
         :disabled="isUploading"
         color="neutral"
@@ -267,7 +267,7 @@ const pagination = ref({
         <UInput
           :model-value="(table?.tableApi?.getColumn('fileName')?.getFilterValue() as string)"
           icon="i-lucide-search"
-          placeholder="Search files..."
+          placeholder="Hľadať súbory..."
           class="w-full"
           @update:model-value="table?.tableApi?.getColumn('fileName')?.setFilterValue($event)"
         />
@@ -285,8 +285,8 @@ const pagination = ref({
         :loading="filesStatus === 'pending'"
         :empty-state="{
           icon: 'i-lucide-file-x',
-          label: 'No files found',
-          description: 'No files have been submitted yet',
+          label: 'Žiadne súbory',
+          description: 'Zatiaľ neboli odoslané žiadne súbory',
         }"
         :ui="{
           base: 'border-separate border-spacing-0',
@@ -302,7 +302,7 @@ const pagination = ref({
         class="flex items-center justify-between gap-3 border-t border-default p-4"
       >
         <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} file(s) found.
+          Nájdených {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} súborov
         </div>
 
         <div class="flex items-center gap-1.5">
@@ -318,37 +318,37 @@ const pagination = ref({
 
     <!-- Storage Integration Notice -->
     <UPageCard
-      title="File Storage"
+      title="Úložisko súborov"
       :ui="{ body: 'space-y-2' }"
     >
       <div class="space-y-4">
         <div>
           <h4 class="text-sm font-medium text-highlighted mb-2">
-            MinIO S3 Storage
+            MinIO S3 úložisko
           </h4>
           <p class="text-sm text-muted">
-            Files are currently stored in MinIO S3-compatible object storage for secure and scalable document management.
+            Súbory sú aktuálne uložené v MinIO S3-kompatibilnom objektovom úložisku pre bezpečnú a škálovateľnú správu dokumentov.
           </p>
           <p class="text-sm text-highlighted font-medium mt-2">
-            Status: <span class="text-success">Active</span>
+            Stav: <span class="text-success">Aktívne</span>
           </p>
         </div>
 
         <div class="border-t border-default pt-4">
           <h4 class="text-sm font-medium text-highlighted mb-2">
-            SharePoint Integration (Future)
+            SharePoint integrácia (Budúcnosť)
           </h4>
           <p class="text-sm text-muted">
-            Future integration with Microsoft SharePoint will provide additional features:
+            Budúca integrácia s Microsoft SharePoint poskytne dodatočné funkcie:
           </p>
           <ul class="text-sm text-muted list-disc list-inside space-y-1 mt-2">
-            <li>Automatic file synchronization</li>
-            <li>Version control and history</li>
-            <li>Advanced access control</li>
-            <li>Real-time collaboration</li>
+            <li>Automatická synchronizácia súborov</li>
+            <li>Správa verzií a história</li>
+            <li>Pokročilé riadenie prístupu</li>
+            <li>Spolupráca v reálnom čase</li>
           </ul>
           <p class="text-sm text-highlighted font-medium mt-2">
-            Status: <span class="text-warning">Planned</span>
+            Stav: <span class="text-warning">Plánované</span>
           </p>
         </div>
       </div>

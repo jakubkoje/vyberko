@@ -25,19 +25,19 @@ const form = useTemplateRef('form')
 const schema = v.object({
   name: v.pipe(
     v.string(),
-    v.nonEmpty('Name is required'),
-    v.minLength(2, 'Name must be at least 2 characters'),
-    v.maxLength(100, 'Name must not exceed 100 characters'),
+    v.nonEmpty('Meno je povinné'),
+    v.minLength(2, 'Meno musí mať aspoň 2 znaky'),
+    v.maxLength(100, 'Meno nesmie presiahnuť 100 znakov'),
   ),
   email: v.pipe(
     v.string(),
-    v.nonEmpty('Email is required'),
-    v.email('Please enter a valid email address'),
+    v.nonEmpty('Email je povinný'),
+    v.email('Prosím zadajte platnú emailovú adresu'),
   ),
   phone: v.optional(v.string()),
   status: v.pipe(
     v.string(),
-    v.nonEmpty('Status is required'),
+    v.nonEmpty('Stav je povinný'),
   ),
   notes: v.optional(v.string()),
 })
@@ -45,10 +45,10 @@ const schema = v.object({
 type Schema = v.InferOutput<typeof schema>
 
 const statusOptions = [
-  { label: 'Pending', value: 'pending' },
-  { label: 'Interviewing', value: 'interviewing' },
-  { label: 'Approved', value: 'approved' },
-  { label: 'Rejected', value: 'rejected' },
+  { label: 'Čakajúci', value: 'pending' },
+  { label: 'Pohovor', value: 'interviewing' },
+  { label: 'Schválený', value: 'approved' },
+  { label: 'Zamietnutý', value: 'rejected' },
 ]
 
 // Form state initialized with existing contender data
@@ -77,7 +77,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    title="Edit Contender"
+    title="Upraviť uchádzača"
   >
     <template #body>
       <UForm
@@ -88,13 +88,13 @@ function onCancel() {
         @submit="onSubmit"
       >
         <UFormField
-          label="Name"
+          label="Meno"
           name="name"
           required
         >
           <UInput
             v-model="state.name"
-            placeholder="John Doe"
+            placeholder="Ján Novák"
             class="w-full"
           />
         </UFormField>
@@ -107,43 +107,43 @@ function onCancel() {
           <UInput
             v-model="state.email"
             type="email"
-            placeholder="john@example.com"
+            placeholder="jan@priklad.sk"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Phone"
+          label="Telefón"
           name="phone"
         >
           <UInput
             v-model="state.phone"
             type="tel"
-            placeholder="+1 (555) 123-4567"
+            placeholder="+421 900 123 456"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Status"
+          label="Stav"
           name="status"
           required
         >
           <USelect
             v-model="state.status"
             :items="statusOptions"
-            placeholder="Select status"
+            placeholder="Vyberte stav"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Notes"
+          label="Poznámky"
           name="notes"
         >
           <UTextarea
             v-model="state.notes"
-            placeholder="Additional notes..."
+            placeholder="Dodatočné poznámky..."
             class="w-full"
             :rows="4"
           />
@@ -155,11 +155,11 @@ function onCancel() {
       <UButton
         color="neutral"
         variant="ghost"
-        label="Cancel"
+        label="Zrušiť"
         @click="onCancel"
       />
       <UButton
-        label="Save Changes"
+        label="Uložiť zmeny"
         @click="form?.submit()"
       />
     </template>

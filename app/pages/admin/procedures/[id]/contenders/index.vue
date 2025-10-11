@@ -42,18 +42,18 @@ async function openCreateModal() {
       // Show credentials in toast
       if (response?.credentials) {
         toast.add({
-          title: 'Contender added successfully',
-          description: `Login credentials:\nUsername: ${response.credentials.username}\nPassword: ${response.credentials.temporaryPassword}\n\nPlease save these credentials and share them with the candidate.`,
+          title: 'Uchádzač bol úspešne pridaný',
+          description: `Prihlasovacie údaje:\nPoužívateľské meno: ${response.credentials.username}\nHeslo: ${response.credentials.temporaryPassword}\n\nProsím uložte si tieto údaje a zdieľajte ich s uchádzačom.`,
           color: 'success',
           timeout: 0, // Don't auto-dismiss
           actions: [{
-            label: 'Copy Credentials',
+            label: 'Kopírovať údaje',
             click: () => {
               navigator.clipboard.writeText(
-                `Username: ${response.credentials.username}\nPassword: ${response.credentials.temporaryPassword}`,
+                `Používateľské meno: ${response.credentials.username}\nHeslo: ${response.credentials.temporaryPassword}`,
               )
               toast.add({
-                title: 'Credentials copied to clipboard',
+                title: 'Údaje boli skopírované do schránky',
                 color: 'success',
               })
             },
@@ -62,7 +62,7 @@ async function openCreateModal() {
       }
       else {
         toast.add({
-          title: 'Contender added successfully',
+          title: 'Uchádzač bol úspešne pridaný',
           color: 'success',
         })
       }
@@ -71,8 +71,8 @@ async function openCreateModal() {
     }
     catch (error) {
       toast.add({
-        title: 'Failed to add contender',
-        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        title: 'Nepodarilo sa pridať uchádzača',
+        description: (error as { data?: { message?: string } })?.data?.message || 'Nastala chyba',
         color: 'error',
       })
     }
@@ -87,14 +87,14 @@ function openContenderDetail(contenderId: number) {
 <template>
   <div>
     <UPageCard
-      title="Contenders"
-      description="Manage candidates for this recruitment procedure."
+      title="Uchádzači"
+      description="Spravujte uchádzačov pre toto výberové konanie."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
     >
       <UButton
-        label="Add Contender"
+        label="Pridať uchádzača"
         color="neutral"
         class="w-fit lg:ms-auto"
         @click="openCreateModal"
@@ -109,7 +109,7 @@ function openContenderDetail(contenderId: number) {
         <UInput
           v-model="q"
           icon="i-lucide-search"
-          placeholder="Search contenders"
+          placeholder="Hľadať uchádzačov"
           autofocus
           class="w-full"
         />

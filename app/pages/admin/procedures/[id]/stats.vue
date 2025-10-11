@@ -9,6 +9,7 @@ const { data: stats, refresh } = await useFetch(`/api/procedures/${procedureId.v
     tests: { total: 0, byCategory: [] },
     staff: { total: 0, active: 0, pending: 0 },
     evaluation: { criteriaCount: 0 },
+    testResults: { total: 0, completed: 0, avgScore: 0, passRate: 0, byCategory: [] },
   }),
 })
 
@@ -22,14 +23,14 @@ function getCategoryLabel(value: string): string {
 }
 
 const statusLabels: Record<string, string> = {
-  registered: 'Registered',
-  testing: 'Testing',
-  passed_written: 'Passed Written',
-  failed_written: 'Failed Written',
-  evaluating: 'Evaluating',
-  passed: 'Passed',
-  failed: 'Failed',
-  selected: 'Selected',
+  registered: 'Registrovaný',
+  testing: 'Testovanie',
+  passed_written: 'Prešiel písomnou skúškou',
+  failed_written: 'Neprešiel písomnou skúškou',
+  evaluating: 'Hodnotenie',
+  passed: 'Úspešný',
+  failed: 'Neúspešný',
+  selected: 'Vybraný',
 }
 
 const statusColors: Record<string, string> = {
@@ -55,8 +56,8 @@ onUnmounted(() => {
   <div class="space-y-6">
     <!-- Page Header -->
     <UPageCard
-      title="Statistics Dashboard"
-      description="Real-time statistics and metrics for this recruitment procedure."
+      title="Dashboard štatistík"
+      description="Real-time štatistiky a metriky pre toto výberové konanie."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
@@ -68,12 +69,12 @@ onUnmounted(() => {
         size="sm"
         @click="refresh"
       >
-        Refresh
+        Obnoviť
       </UButton>
     </UPageCard>
 
     <!-- Key Metrics Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <!-- Total Contenders -->
       <UPageCard variant="subtle">
         <div class="flex items-center gap-4">
@@ -88,7 +89,7 @@ onUnmounted(() => {
               {{ stats.contenders.total }}
             </div>
             <div class="text-sm text-muted">
-              Total Candidates
+              Celkom uchádzačov
             </div>
           </div>
         </div>
@@ -108,7 +109,7 @@ onUnmounted(() => {
               {{ stats.tests.total }}
             </div>
             <div class="text-sm text-muted">
-              Total Tests
+              Celkom testov
             </div>
           </div>
         </div>
@@ -128,7 +129,7 @@ onUnmounted(() => {
               {{ stats.staff.active }} / {{ stats.staff.total }}
             </div>
             <div class="text-sm text-muted">
-              Active Staff
+              Aktívni zamestnanci
             </div>
           </div>
         </div>
@@ -148,8 +149,60 @@ onUnmounted(() => {
               {{ stats.evaluation.criteriaCount }}
             </div>
             <div class="text-sm text-muted">
-              Evaluation Criteria
+              Kritériá hodnotenia
             </div>
+          </div>
+        </div>
+      </UPageCard>
+
+      <!-- Completed Tests -->
+      <UPageCard variant="subtle">
+        <div class="flex items-center gap-4">
+          <div class="p-3 rounded-lg bg-success/10">
+            <UIcon
+              name="i-lucide-check-circle"
+              class="size-6 text-success"
+            />
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-highlighted">
+              {{ stats.testResults.completed }} / {{ stats.testResults.total }}
+            </div>
+            <div class="text-sm text-muted">
+              Dokončené testy
+            </div>
+          </div>
+        </div>
+      </UPageCard>
+    </div>
+
+    <!-- Test Results Performance -->
+    <div
+      v-if="stats.testResults.completed > 0"
+      class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+    >
+      <!-- Average Score -->
+      <UPageCard variant="subtle">
+        <div class="text-center">
+          <div class="text-4xl font-bold text-highlighted mb-2">
+            {{ stats.testResults.avgScore.toFixed(1) }}
+          </div>
+          <div class="text-sm text-muted">
+            Priemerné skóre
+          </div>
+        </div>
+      </UPageCard>
+
+      <!-- Pass Rate -->
+      <UPageCard variant="subtle">
+        <div class="text-center">
+          <div class="text-4xl font-bold mb-2"
+            :class="stats.testResults.passRate >= 70 ? 'text-success' : stats.testResults.passRate >= 50 ? 'text-warning' : 'text-error'"
+          >
+            {{ stats.testResults.passRate.toFixed(1) }}%
+          </div>
+          <div class="text-sm text-muted">
+            Úspešnosť
           </div>
         </div>
       </UPageCard>
@@ -159,8 +212,8 @@ onUnmounted(() => {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Candidates by Status -->
       <UPageCard
-        title="Candidates by Status"
-        description="Distribution of candidates across different stages"
+        title="Uchádzači podľa stavu"
+        description="Rozdelenie uchádzačov podľa jednotlivých fáz"
       >
         <div
           v-if="stats.contenders.byStatus && stats.contenders.byStatus.length > 0"
@@ -187,14 +240,14 @@ onUnmounted(() => {
           v-else
           class="text-center py-8 text-muted"
         >
-          No candidates yet
+          Zatiaľ žiadni uchádzači
         </div>
       </UPageCard>
 
       <!-- Tests by Category -->
       <UPageCard
-        title="Tests by Category"
-        description="Distribution of tests across exam categories"
+        title="Testy podľa kategórie"
+        description="Rozdelenie testov podľa kategórií skúšok"
       >
         <div
           v-if="stats.tests.byCategory && stats.tests.byCategory.length > 0"
@@ -221,14 +274,63 @@ onUnmounted(() => {
           v-else
           class="text-center py-8 text-muted"
         >
-          No tests assigned yet
+          Zatiaľ žiadne priradené testy
         </div>
       </UPageCard>
     </div>
 
+    <!-- Test Results by Category -->
+    <UPageCard
+      v-if="stats.testResults.byCategory && stats.testResults.byCategory.length > 0"
+      title="Výsledky testov podľa kategórie"
+      description="Štatistiky dokončených testov v jednotlivých kategóriách"
+    >
+      <div class="space-y-3">
+        <div
+          v-for="item in stats.testResults.byCategory"
+          :key="item.category"
+          class="p-4 rounded-md border border-default"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-3">
+              <UIcon
+                name="i-lucide-file-check"
+                class="size-5 text-primary"
+              />
+              <span class="text-sm font-semibold">{{ getCategoryLabel(item.category) }}</span>
+            </div>
+            <UBadge
+              :label="`${item.totalResponses} odpovedí`"
+              variant="subtle"
+              color="neutral"
+            />
+          </div>
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div class="text-xs text-muted mb-1">Priemerné skóre</div>
+              <div class="text-lg font-semibold text-highlighted">{{ item.avgScore.toFixed(1) }}</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-1">Úspešných</div>
+              <div class="text-lg font-semibold text-success">{{ item.passedCount }}</div>
+            </div>
+            <div>
+              <div class="text-xs text-muted mb-1">Úspešnosť</div>
+              <div
+                class="text-lg font-semibold"
+                :class="item.passRate >= 70 ? 'text-success' : item.passRate >= 50 ? 'text-warning' : 'text-error'"
+              >
+                {{ item.passRate.toFixed(1) }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </UPageCard>
+
     <!-- Last Updated Info -->
     <div class="text-xs text-muted text-center">
-      Statistics auto-refresh every 30 seconds
+      Štatistiky sa automaticky aktualizujú každých 30 sekúnd
     </div>
   </div>
 </template>

@@ -11,20 +11,20 @@ const procedureId = computed(() => Number(route.params.id))
 const { data: procedure } = await useFetch(`/api/procedures/${procedureId.value}`)
 
 const links = [[{
-  label: 'Overview',
+  label: 'Prehľad',
   icon: 'i-lucide-info',
   to: `/admin/procedures/${procedureId.value}`,
   exact: true,
 }, {
-  label: 'Statistics',
+  label: 'Štatistiky',
   icon: 'i-lucide-bar-chart',
   to: `/admin/procedures/${procedureId.value}/stats`,
 }, {
-  label: 'Contenders',
+  label: 'Uchádzači',
   icon: 'i-lucide-users',
   to: `/admin/procedures/${procedureId.value}/contenders`,
 }, {
-  label: 'Settings',
+  label: 'Nastavenia',
   icon: 'i-lucide-settings',
   to: `/admin/procedures/${procedureId.value}/settings`,
 }]] satisfies NavigationMenuItem[][]
@@ -35,7 +35,7 @@ const links = [[{
     id="procedure-detail"
   >
     <template #header>
-      <UDashboardNavbar :title="procedure?.title || 'Procedure'">
+      <UDashboardNavbar :title="procedure?.title || 'Výberové konanie'">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>

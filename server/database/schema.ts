@@ -64,6 +64,7 @@ export const surveyResponses = pgTable('survey_responses', {
   procedureId: integer('procedure_id').notNull().references(() => procedures.id, { onDelete: 'cascade' }),
   responseData: jsonb('response_data').notNull(), // SurveyJS result data with answers
   score: integer('score'), // Calculated score if applicable
+  totalQuestions: integer('total_questions'), // Total number of questions in the test
   isPassed: integer('is_passed'), // 1 = passed, 0 = failed, null = not graded
   startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
   submittedAt: timestamp('submitted_at', { withTimezone: true }), // When the test was submitted

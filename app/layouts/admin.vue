@@ -7,21 +7,21 @@ const toast = useToast()
 const open = ref(false)
 
 const links = [[{
-  label: 'Home',
+  label: 'Domov',
   icon: 'i-lucide-house',
   to: '/admin',
   onSelect: () => {
     open.value = false
   },
 }, {
-  label: 'Surveys',
+  label: 'Testy',
   icon: 'i-lucide-file-text',
   to: '/admin/surveys',
   onSelect: () => {
     open.value = false
   },
 }, {
-  label: 'Procedures',
+  label: 'Výberové konania',
   icon: 'i-lucide-briefcase',
   to: '/admin/procedures',
   onSelect: () => {
@@ -32,7 +32,7 @@ const links = [[{
 
 const groups = computed(() => [{
   id: 'links',
-  label: 'Go to',
+  label: 'Prejsť na',
   items: links.flat(),
 },
 ])
@@ -44,18 +44,18 @@ onMounted(async () => {
   }
 
   toast.add({
-    title: 'We use first-party cookies to enhance your experience on our website.',
+    title: 'Používame cookies na zlepšenie vášho zážitku na našej webovej stránke.',
     duration: 0,
     close: false,
     actions: [{
-      label: 'Accept',
+      label: 'Prijať',
       color: 'neutral',
       variant: 'outline',
       onClick: () => {
         cookie.value = 'accepted'
       },
     }, {
-      label: 'Opt out',
+      label: 'Odmietnuť',
       color: 'neutral',
       variant: 'ghost',
     }],

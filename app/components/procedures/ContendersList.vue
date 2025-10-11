@@ -23,19 +23,43 @@ const emit = defineEmits<{
   select: [id: number]
 }>()
 
+const toast = useToast()
+
+async function copyAccessCode(cisIdentifier: string) {
+  try {
+    await navigator.clipboard.writeText(cisIdentifier)
+    toast.add({
+      title: 'Skopírované!',
+      description: 'Prístupový kód bol skopírovaný do schránky',
+      color: 'success',
+    })
+  }
+  catch (error) {
+    toast.add({
+      title: 'Kopírovanie zlyhalo',
+      description: 'Nepodarilo sa skopírovať prístupový kód do schránky',
+      color: 'error',
+    })
+  }
+}
+
 function getItems(contender: Contender): DropdownMenuItem[] {
   return [{
-    label: 'View details',
+    label: 'Zobraziť detaily',
     icon: 'i-lucide-eye',
     onSelect: () => emit('select', contender.id),
   }, {
-    label: 'Edit contender',
+    label: 'Kopírovať prístupový kód',
+    icon: 'i-lucide-copy',
+    onSelect: () => copyAccessCode(contender.cisIdentifier),
+  }, {
+    label: 'Upraviť uchádzača',
     icon: 'i-lucide-pencil',
     onSelect: () => console.log('Edit contender:', contender),
   }, {
     type: 'separator',
   }, {
-    label: 'Remove contender',
+    label: 'Odstrániť uchádzača',
     icon: 'i-lucide-trash',
     color: 'error' as const,
     onSelect: () => console.log('Remove contender:', contender),
@@ -59,19 +83,19 @@ const statusColors: Record<string, string> = {
 }
 
 const statusLabels: Record<string, string> = {
-  registered: 'Registered',
-  testing: 'Testing',
-  passed_written: 'Passed Written',
-  failed_written: 'Failed Written',
-  evaluating: 'Evaluating',
-  passed: 'Passed',
-  failed: 'Failed',
-  selected: 'Selected',
+  registered: 'Registrovaný',
+  testing: 'Testovanie',
+  passed_written: 'Prešiel písomnou skúškou',
+  failed_written: 'Neprešiel písomnou skúškou',
+  evaluating: 'Hodnotenie',
+  passed: 'Úspešný',
+  failed: 'Neúspešný',
+  selected: 'Vybraný',
   // Legacy status values
-  pending: 'Pending',
-  interviewing: 'Interviewing',
-  approved: 'Approved',
-  rejected: 'Rejected',
+  pending: 'Čakajúci',
+  interviewing: 'Pohovor',
+  approved: 'Schválený',
+  rejected: 'Zamietnutý',
 }
 </script>
 
@@ -99,6 +123,9 @@ const statusLabels: Record<string, string> = {
           </p>
           <p class="text-muted truncate">
             {{ contender.email }}
+          </p>
+          <p class="text-xs text-muted font-mono">
+            Kód: {{ contender.cisIdentifier }}
           </p>
         </div>
       </div>
@@ -133,7 +160,7 @@ const statusLabels: Record<string, string> = {
       class="size-12 text-muted mb-4"
     />
     <p class="text-sm text-muted">
-      No contenders found
+      Žiadni uchádzači
     </p>
   </div>
 </template>

@@ -59,9 +59,24 @@ export default defineEventHandler(async (event) => {
 
   const db = useDrizzle()
 
-  // Generate unique identifier in format VK/YYYY/NNNN
-  const currentYear = new Date().getFullYear()
-  const identifier = await generateProcedureIdentifier(db, currentYear)
+  // Use provided identifier (from CISSS import) or generate new one
+  let identifier = body.identifier
+  if (!identifier) {
+    const currentYear = new Date().getFullYear()
+    identifier = await generateProcedureIdentifier(db, currentYear)
+  }
+
+  // Check if identifier already exists
+  const existingProcedure = await db.query.procedures.findFirst({
+    where: eq(tables.procedures.identifier, identifier),
+  })
+
+  if (existingProcedure) {
+    throw createError({
+      statusCode: 409,
+      message: `Procedure with identifier ${identifier} already exists`,
+    })
+  }
 
   try {
     const newProcedure = await db

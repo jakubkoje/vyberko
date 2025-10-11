@@ -19,25 +19,25 @@ const form = useTemplateRef('form')
 const schema = v.object({
   cisIdentifier: v.pipe(
     v.string(),
-    v.nonEmpty('CIS identifier is required'),
-    v.minLength(3, 'CIS identifier must be at least 3 characters'),
-    v.maxLength(50, 'CIS identifier must not exceed 50 characters'),
+    v.nonEmpty('Identifikátor je povinný'),
+    v.minLength(3, 'Identifikátor musí mať aspoň 3 znaky'),
+    v.maxLength(50, 'Identifikátor nesmie presiahnuť 50 znakov'),
   ),
   name: v.pipe(
     v.string(),
-    v.nonEmpty('Name is required'),
-    v.minLength(2, 'Name must be at least 2 characters'),
-    v.maxLength(100, 'Name must not exceed 100 characters'),
+    v.nonEmpty('Meno je povinné'),
+    v.minLength(2, 'Meno musí mať aspoň 2 znaky'),
+    v.maxLength(100, 'Meno nesmie presiahnuť 100 znakov'),
   ),
   email: v.pipe(
     v.string(),
-    v.nonEmpty('Email is required'),
-    v.email('Please enter a valid email address'),
+    v.nonEmpty('Email je povinný'),
+    v.email('Prosím zadajte platnú emailovú adresu'),
   ),
   phone: v.optional(v.string()),
   status: v.pipe(
     v.string(),
-    v.nonEmpty('Status is required'),
+    v.nonEmpty('Stav je povinný'),
   ),
   notes: v.optional(v.string()),
 })
@@ -45,14 +45,14 @@ const schema = v.object({
 type Schema = v.InferOutput<typeof schema>
 
 const statusOptions = [
-  { label: 'Registered', value: 'registered' },
-  { label: 'Testing', value: 'testing' },
-  { label: 'Passed Written', value: 'passed_written' },
-  { label: 'Failed Written', value: 'failed_written' },
-  { label: 'Evaluating', value: 'evaluating' },
-  { label: 'Passed', value: 'passed' },
-  { label: 'Failed', value: 'failed' },
-  { label: 'Selected', value: 'selected' },
+  { label: 'Registrovaný', value: 'registered' },
+  { label: 'Testovanie', value: 'testing' },
+  { label: 'Prešiel písomnou skúškou', value: 'passed_written' },
+  { label: 'Neprešiel písomnou skúškou', value: 'failed_written' },
+  { label: 'Hodnotenie', value: 'evaluating' },
+  { label: 'Úspešný', value: 'passed' },
+  { label: 'Neúspešný', value: 'failed' },
+  { label: 'Vybraný', value: 'selected' },
 ]
 
 // Form state
@@ -82,7 +82,7 @@ function onCancel() {
   <UModal
     :ui="{ footer: 'justify-end' }"
     :close="{ onClick: onCancel }"
-    title="Add Contender"
+    title="Pridať uchádzača"
   >
     <template #body>
       <UForm
@@ -93,27 +93,27 @@ function onCancel() {
         @submit="onSubmit"
       >
         <UFormField
-          label="CIS Identifier"
+          label="Identifikátor"
           name="cisIdentifier"
-          description="Unique identifier from CIS ŠS system (will be used as login username)"
+          description="Jedinečný identifikátor (bude použitý ako prístupový kód na test)"
           required
         >
           <UInput
             v-model="state.cisIdentifier"
-            placeholder="e.g., CIS123456"
+            placeholder="napr. UC-2025-0001"
             class="w-full"
             autofocus
           />
         </UFormField>
 
         <UFormField
-          label="Name"
+          label="Meno"
           name="name"
           required
         >
           <UInput
             v-model="state.name"
-            placeholder="John Doe"
+            placeholder="Ján Novák"
             class="w-full"
           />
         </UFormField>
@@ -126,43 +126,43 @@ function onCancel() {
           <UInput
             v-model="state.email"
             type="email"
-            placeholder="john@example.com"
+            placeholder="jan@priklad.sk"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Phone"
+          label="Telefón"
           name="phone"
         >
           <UInput
             v-model="state.phone"
             type="tel"
-            placeholder="+1 (555) 123-4567"
+            placeholder="+421 900 123 456"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Status"
+          label="Stav"
           name="status"
           required
         >
           <USelect
             v-model="state.status"
             :items="statusOptions"
-            placeholder="Select status"
+            placeholder="Vyberte stav"
             class="w-full"
           />
         </UFormField>
 
         <UFormField
-          label="Notes"
+          label="Poznámky"
           name="notes"
         >
           <UTextarea
             v-model="state.notes"
-            placeholder="Additional notes about the candidate..."
+            placeholder="Dodatočné poznámky o uchádzačovi..."
             class="w-full"
             :rows="3"
           />
@@ -174,11 +174,11 @@ function onCancel() {
       <UButton
         color="neutral"
         variant="ghost"
-        label="Cancel"
+        label="Zrušiť"
         @click="onCancel"
       />
       <UButton
-        label="Add Contender"
+        label="Pridať uchádzača"
         @click="form?.submit()"
       />
     </template>
