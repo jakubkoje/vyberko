@@ -111,7 +111,7 @@ function onCancel() {
         >
           <UInputMenu
             v-model="state.roleId"
-            :options="roles.map(r => ({ label: r.displayName, value: r.id }))"
+            :items="roles.map(r => ({ label: r.displayName, value: r.id }))"
             placeholder="Vyberte rolu..."
             class="w-full"
             value-attribute="value"
