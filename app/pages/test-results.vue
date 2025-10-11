@@ -8,71 +8,58 @@
           </h1>
           
           <div class="mb-12">
-            <!-- <UBadge
+            <UBadge
+              size="xl"
               :class="[
                 'inline-block px-12 py-8 rounded-2xl text-white text-4xl font-bold',
                 isPassed ? 'bg-green-500' : 'bg-red-500'
               ]"
             >
               {{ isPassed ? 'ÚSPEŠNÝ TEST' : 'NEÚSPEŠNÝ TEST' }}
-            </UBadge> -->
-
-            <UBadge size="xl" :class="[
-                'inline-block px-12 py-8 rounded-2xl text-white text-4xl font-bold',
-                isPassed ? 'bg-green-500' : 'bg-red-500'
-              ]">{{ isPassed ? 'ÚSPEŠNÝ TEST' : 'NEÚSPEŠNÝ TEST' }}</UBadge>
-
+            </UBadge>
           </div>
 
           <UDivider class="my-8" />
 
           <div class="space-y-6 text-left max-w-md mx-auto">
             <UAlert
-              :color="isPassed ? 'green' : 'blue'"
+              :color="isPassed ? 'green' : 'red'"
               variant="soft"
-              :title="isPassed ? 'Gratulujeme!' : 'Ďakujeme za účasť'"
-              :description="isPassed 
-                ? 'Úspešne ste absolvovali výberový test. Vaše výsledky boli odoslané a uložené.'
-                : 'Test ste dokončili. Vaše výsledky boli odoslané a uložené.'"
-              :icon="isPassed ? 'i-lucide-check-circle' : 'i-lucide-info'"
+              :title="isPassed ? 'Test úspešne absolvovaný!' : 'Test neúspešný'"
+              :description="isPassed
+                ? 'Gratulujeme! Dosiahli ste potrebný počet bodov. Môžete pokračovať na ústnu časť výberového konania.'
+                : 'Nedosiahli ste požadovaný počet bodov. Žiaľ, nemôžete pokračovať v ďalších kolách výberového konania.'"
+              :icon="isPassed ? 'i-lucide-check-circle' : 'i-lucide-x-circle'"
             />
 
             <div>
               <h2 class="text-xl font-semibold mb-3">
-                Čo sa stane ďalej?
+                Ďalší krok
               </h2>
-              <ul class="space-y-3 text-muted">
-                <li class="flex items-start gap-3">
+              <div v-if="isPassed" class="space-y-3 text-muted">
+                <div class="flex items-start gap-3">
                   <UIcon
-                    name="i-lucide-mail"
+                    name="i-lucide-clipboard-list"
                     class="text-primary mt-1 flex-shrink-0"
                   />
                   <span>
-                    <strong class="text-foreground">Email s potvrdením:</strong> 
-                    Do 24 hodín dostanete email s potvrdením o prijatí vašich výsledkov.
+                    <strong class="text-foreground">Ústna skúška:</strong>
+                    Prosím, ozvite sa administrátorovi výberového konania. Budete pozvaný na ústnu časť testovania, kde vás bude hodnotiť komisia.
                   </span>
-                </li>
-                <li class="flex items-start gap-3">
+                </div>
+              </div>
+              <div v-else class="space-y-3 text-muted">
+                <div class="flex items-start gap-3">
                   <UIcon
-                    name="i-lucide-chart-bar"
+                    name="i-lucide-info"
                     class="text-primary mt-1 flex-shrink-0"
                   />
                   <span>
-                    <strong class="text-foreground">Vyhodnotenie:</strong> 
-                    Vaše výsledky budú kompletne vyhodnotené v priebehu 5 pracovných dní.
+                    <strong class="text-foreground">Ukončenie:</strong>
+                    Vaše výsledky boli zaznamenané. Výberové konanie pre vás týmto končí. Ďakujeme za účasť.
                   </span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <UIcon
-                    name="i-lucide-phone"
-                    class="text-primary mt-1 flex-shrink-0"
-                  />
-                  <span>
-                    <strong class="text-foreground">Kontakt:</strong> 
-                    V prípade úspešného absolvovania vás budeme kontaktovať s informáciami o ďalších krokoch výberového konania.
-                  </span>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
 
             <div class="pt-4">
@@ -85,24 +72,12 @@
                 <template #leading>
                   <UIcon name="i-lucide-home" />
                 </template>
-                Späť na hlavnú stránku
+                Zavrieť
               </UButton>
             </div>
           </div>
         </div>
       </UCard>
-
-      <div class="mt-6 text-center text-sm text-muted">
-        <p>
-          Máte otázky? Kontaktujte nás na 
-          <a
-            href="mailto:podpora@vyberko.sk"
-            class="text-primary hover:underline"
-          >
-            podpora@vyberko.sk
-          </a>
-        </p>
-      </div>
     </div>
   </div>
 </template>

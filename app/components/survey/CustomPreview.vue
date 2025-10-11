@@ -29,7 +29,7 @@
               />
               {{ isSaving ? 'Ukladá sa...' : 'Uložené' }}
             </UBadge>
-            
+
             <!-- Timer Badge -->
             <UBadge
               v-if="showTimer && timeRemaining !== null"
@@ -38,10 +38,13 @@
               variant="soft"
               class="text-xl font-bold"
             >
-              <UIcon name="i-lucide-clock" class="mr-1" />
+              <UIcon
+                name="i-lucide-clock"
+                class="mr-1"
+              />
               {{ formatTime(timeRemaining) }}
             </UBadge>
-            
+
             <!-- Page Counter -->
             <UBadge
               v-if="currentPageIndex < totalPages - 1"
@@ -95,7 +98,7 @@
                 v-if="element.type !== 'html'"
                 class="text-sm font-semibold text-primary mb-2"
               >
-                {{ element?.title}}
+                {{ element?.title }}
               </div>
 
               <!-- HTML Element -->
@@ -170,7 +173,7 @@
               >
                 <USelect
                   v-model="answers[element.name]"
-                  :options="getChoices(element.choices)"
+                  :items="getChoices(element.choices)"
                   placeholder="Vyberte možnosť"
                   size="lg"
                 />
@@ -316,7 +319,7 @@ interface SurveyElement {
   inputType?: string
   rows?: number
   maxLength?: number
-  choices?: Array<string | { value: string; text: string }>
+  choices?: Array<string | { value: string, text: string }>
   rateMax?: number
   [key: string]: any
 }
@@ -346,7 +349,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   startDate: null,
   endDate: null,
-  accessCode: undefined
+  accessCode: undefined,
 })
 
 const emit = defineEmits(['complete', 'timeExpired'])
@@ -371,9 +374,9 @@ const progressPercentage = computed(() => {
   return ((currentPageIndex.value + 1) / totalPages.value) * 100
 })
 
-const getChoices = (choices?: Array<string | { value: string; text: string }>) => {
+const getChoices = (choices?: Array<string | { value: string, text: string }>) => {
   if (!choices) return []
-  return choices.map(choice => {
+  return choices.map((choice) => {
     if (typeof choice === 'string') {
       return { label: choice, value: choice }
     }
@@ -392,19 +395,20 @@ const toggleCheckbox = (name: string, value: string, checked: boolean) => {
   if (!answers.value[name]) {
     answers.value[name] = []
   }
-  
+
   if (!Array.isArray(answers.value[name])) {
     answers.value[name] = []
   }
-  
+
   const currentArray = answers.value[name] as string[]
-  
+
   if (checked) {
     // Add value if not already present
     if (!currentArray.includes(value)) {
       answers.value[name] = [...currentArray, value]
     }
-  } else {
+  }
+  else {
     // Remove value
     answers.value[name] = currentArray.filter(v => v !== value)
   }
@@ -420,12 +424,12 @@ const formatTime = (seconds: number) => {
 
 const calculateTimeRemaining = () => {
   if (!props.endDate) return null
-  
+
   const now = new Date()
   const end = new Date(props.endDate)
   const diffMs = end.getTime() - now.getTime()
   const diffSeconds = Math.floor(diffMs / 1000)
-  
+
   return diffSeconds > 0 ? diffSeconds : 0
 }
 
@@ -446,12 +450,12 @@ const startTimer = () => {
   }
 
   showTimer.value = true
-  
+
   // Calculate initial time
   const remaining = calculateTimeRemaining()
   if (remaining !== null) {
     timeRemaining.value = remaining
-    
+
     // If already expired, handle immediately
     if (remaining === 0) {
       handleTimeExpired()
@@ -462,10 +466,10 @@ const startTimer = () => {
   // Update timer every second
   timerInterval = setInterval(() => {
     const remaining = calculateTimeRemaining()
-    
+
     if (remaining !== null) {
       timeRemaining.value = remaining
-      
+
       if (remaining === 0) {
         if (timerInterval) {
           clearInterval(timerInterval)
@@ -503,84 +507,87 @@ const previousPage = () => {
 const completeSurvey = () => {
   isCompleted.value = true
   stopTimer()
-  
+
   // Clear localStorage on completion
   clearLocalStorage()
-  
+
   emit('complete', answers.value)
 }
 
 // localStorage functions
 const saveToLocalStorage = () => {
-  if (!process.client) return
-  
+  if (!import.meta.client) return
+
   try {
     isSaving.value = true
-    
+
     const storageKey = getStorageKey()
     const timestamp = new Date().toISOString()
     const dataToSave = {
       answers: answers.value,
       currentPageIndex: currentPageIndex.value,
-      lastSaved: timestamp
+      lastSaved: timestamp,
     }
-    
+
     localStorage.setItem(storageKey, JSON.stringify(dataToSave))
     lastSavedTime.value = timestamp
-    
+
     console.log(`💾 Answers auto-saved for ${props.accessCode || 'default'}`)
-    
+
     // Show "saving" indicator briefly
     setTimeout(() => {
       isSaving.value = false
     }, 500)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save to localStorage:', error)
     isSaving.value = false
   }
 }
 
 const loadFromLocalStorage = () => {
-  if (!process.client) return
-  
+  if (!import.meta.client) return
+
   try {
     const storageKey = getStorageKey()
     const savedData = localStorage.getItem(storageKey)
-    
+
     if (savedData) {
       const parsed = JSON.parse(savedData)
       answers.value = parsed.answers || {}
       currentPageIndex.value = parsed.currentPageIndex || 0
       lastSavedTime.value = parsed.lastSaved || null
-      
+
       console.log(`📂 Loaded saved answers for ${props.accessCode || 'default'}`, {
         answersCount: Object.keys(answers.value).length,
-        lastSaved: parsed.lastSaved
+        lastSaved: parsed.lastSaved,
       })
-      
+
       // Show notification to user
       if (Object.keys(answers.value).length > 0) {
         // Could emit an event or show toast here
         console.log('ℹ️ Obnovené neuložené odpovede')
       }
-      
+
       return true
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to load from localStorage:', error)
   }
-  
+
   return false
 }
 
 const clearLocalStorage = () => {
-  if (!process.client) return
-  
+  if (!import.meta.client) return
+
   try {
     const storageKey = getStorageKey()
     localStorage.removeItem(storageKey)
     console.log(`🗑️ Cleared saved answers for ${props.accessCode || 'default'}`)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to clear localStorage:', error)
   }
 }
@@ -592,7 +599,7 @@ const debouncedSave = () => {
   if (saveTimeout) {
     clearTimeout(saveTimeout)
   }
-  
+
   saveTimeout = setTimeout(() => {
     saveToLocalStorage()
   }, 500) // Wait 500ms after last change
@@ -616,14 +623,14 @@ watch(currentPageIndex, () => {
 onMounted(() => {
   // Load saved answers first
   loadFromLocalStorage()
-  
+
   // Then start timer
   startTimer()
 })
 
 onBeforeUnmount(() => {
   stopTimer()
-  
+
   // Clear save timeout
   if (saveTimeout) {
     clearTimeout(saveTimeout)
@@ -653,4 +660,3 @@ onBeforeUnmount(() => {
   margin-bottom: 0.75rem;
 }
 </style>
-
