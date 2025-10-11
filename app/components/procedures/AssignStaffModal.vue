@@ -42,10 +42,10 @@ const schema = v.object({
 type Schema = v.InferOutput<typeof schema>
 
 // Form state
-const state = reactive<Partial<Schema>>({
+const state = reactive({
   name: '',
   email: '',
-  roleId: undefined,
+  roleId: undefined as number | undefined,
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -109,12 +109,11 @@ function onCancel() {
           required
           help="Vyberte rolu pre tohto zamestnanca na tomto výberovom konaní"
         >
-          <UInputMenu
+          <USelect
             v-model="state.roleId"
-            :items="roles.map(r => ({ label: r.displayName, value: r.id }))"
+            :options="roles.map(r => ({ label: r.displayName, value: r.id }))"
             placeholder="Vyberte rolu..."
             class="w-full"
-            value-attribute="value"
           />
         </UFormField>
 
