@@ -9,13 +9,18 @@ export default defineEventHandler(async (event) => {
   }
 
   const db = useDrizzle()
-  const survey = await db
-    .select()
-    .from(tables.surveys)
-    .where(eq(tables.surveys.id, Number(id)))
-    .limit(1)
+  const survey = await db.query.surveys.findFirst({
+    where: eq(tables.surveys.id, Number(id)),
+    with: {
+      procedureSurvey: {
+        with: {
+          procedure: true,
+        },
+      },
+    },
+  })
 
-  if (!survey.length) {
+  if (!survey) {
     throw createError({
       statusCode: 404,
       message: 'Survey not found',
@@ -23,7 +28,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Check if user has access to this organization
-  await requireOrganizationAccess(event, survey[0].organizationId, 'surveys', 'read')
+  await requireOrganizationAccess(event, survey.organizationId, 'surveys', 'read')
 
-  return survey[0]
+  return survey
 })

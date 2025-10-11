@@ -1,26 +1,23 @@
 export default defineEventHandler(async (event) => {
-  // TODO: Get userId and organizationId from session/auth
-  const organizationId = getQuery(event).organizationId
-    ? Number(getQuery(event).organizationId)
-    : null
-
-  if (!organizationId) {
-    throw createError({
-      statusCode: 400,
-      message: 'Organization ID is required',
-    })
-  }
+  // Get current organization from user context
+  const organizationId = await getCurrentOrganizationId(event)
 
   // Check if user has access to this organization
   await requireOrganizationAccess(event, organizationId, 'surveys', 'read')
 
   const db = useDrizzle()
 
-  const surveys = await db
-    .select()
-    .from(tables.surveys)
-    .where(eq(tables.surveys.organizationId, organizationId))
-    .orderBy(desc(tables.surveys.updatedAt))
+  const surveys = await db.query.surveys.findMany({
+    where: eq(tables.surveys.organizationId, organizationId),
+    orderBy: [desc(tables.surveys.updatedAt)],
+    with: {
+      procedureSurvey: {
+        with: {
+          procedure: true,
+        },
+      },
+    },
+  })
 
   return surveys
 })

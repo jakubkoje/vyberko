@@ -36,7 +36,7 @@
             icon="i-lucide-plus"
             size="md"
             label="Create Survey"
-            @click="navigateTo('/admin/surveys/new')"
+            @click="createSurvey"
           />
         </template>
       </UDashboardNavbar>
@@ -101,6 +101,7 @@ import type { TableColumn } from '@nuxt/ui'
 import { DateTime } from 'luxon'
 import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
+import { LazySurveysCreateSurveyModal } from '#components'
 
 const UIcon = resolveComponent('UIcon')
 const UButton = resolveComponent('UButton')
@@ -112,13 +113,16 @@ definePageMeta({
 
 const { isNotificationsSlideoverOpen } = useDashboard()
 const toast = useToast()
+const overlay = useOverlay()
 const table = useTemplateRef('table')
+const router = useRouter()
 
 const { data, status, refresh } = await useFetch('/api/surveys', {
   lazy: true,
-  query: {
-    organizationId: 1,
-  },
+})
+
+const { data: examCategoriesCodelist } = await useFetch('/api/exam-categories/codelist', {
+  default: () => [],
 })
 
 type Survey = NonNullable<typeof data.value>[number]
@@ -126,6 +130,54 @@ type Survey = NonNullable<typeof data.value>[number]
 watch(data, () => {
   console.log(data.value)
 })
+
+function getCategoryLabel(value: string): string {
+  const item = examCategoriesCodelist.value.find((c: any) => c.value === value)
+  return item?.label || value
+}
+
+const modal = overlay.create(LazySurveysCreateSurveyModal)
+
+async function createSurvey() {
+  const instance = modal.open()
+
+  const result: {
+    submitted: boolean
+    data?: { title: string, category: string }
+  } = await instance.result
+
+  if (result.submitted && result.data) {
+    try {
+      const newSurvey = await $fetch('/api/surveys', {
+        method: 'POST',
+        body: {
+          ...result.data,
+          jsonData: {
+            title: result.data.title,
+            pages: [],
+          },
+        },
+      })
+
+      toast.add({
+        title: 'Survey created successfully',
+        color: 'success',
+      })
+
+      refresh()
+      if (newSurvey?.id) {
+        router.push(`/admin/surveys/${newSurvey.id}`)
+      }
+    }
+    catch (error) {
+      toast.add({
+        title: 'Failed to create survey',
+        description: (error as { data?: { message?: string } })?.data?.message || 'An error occurred',
+        color: 'error',
+      })
+    }
+  }
+}
 
 function getRowItems(row: Row<Survey>) {
   return [
@@ -146,6 +198,37 @@ function getRowItems(row: Row<Survey>) {
       onSelect() {
         // TODO: Implement preview
         console.log('Preview survey:', row.original)
+      },
+    },
+    {
+      label: 'Duplicate survey',
+      icon: 'i-lucide-copy',
+      async onSelect() {
+        try {
+          const newSurvey = await $fetch('/api/surveys', {
+            method: 'POST',
+            body: {
+              jsonData: row.original.jsonData,
+              title: `${row.original.title} (Copy)`,
+              category: row.original.category,
+            },
+          })
+          await refresh()
+          toast.add({
+            title: 'Survey duplicated',
+            description: 'The survey has been duplicated.',
+            color: 'success',
+          })
+          navigateTo(`/admin/surveys/${newSurvey.id}`)
+        }
+        catch (error) {
+          console.error('Failed to duplicate survey:', error)
+          toast.add({
+            title: 'Error',
+            description: 'Failed to duplicate survey.',
+            color: 'error',
+          })
+        }
       },
     },
     {
@@ -214,6 +297,24 @@ const columns: TableColumn<Survey>[] = [
         }),
         h('span', { class: 'font-medium' }, row.original.title),
       ])
+    },
+  },
+  {
+    accessorKey: 'category',
+    header: 'Category',
+    cell: ({ row }) => {
+      return h('span', { class: 'text-sm' }, getCategoryLabel(row.original.category))
+    },
+  },
+  {
+    accessorKey: 'procedure',
+    header: 'Procedure',
+    cell: ({ row }) => {
+      const procedure = row.original.procedureSurvey?.procedure
+      if (!procedure) {
+        return h('span', { class: 'text-sm text-muted italic' }, 'Not assigned')
+      }
+      return h('span', { class: 'text-sm' }, procedure.title)
     },
   },
   {

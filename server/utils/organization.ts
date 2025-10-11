@@ -80,6 +80,40 @@ export function hasPermission(permissions: Permission, resource: keyof Permissio
   return resourcePermissions[action] === true
 }
 
+export async function getCurrentUser(event: H3Event) {
+  // TODO: Get userId from session/auth
+  const userId = 1 // Temporary hardcode
+
+  const db = useDrizzle()
+  const user = await db
+    .select()
+    .from(tables.users)
+    .where(eq(tables.users.id, userId))
+    .limit(1)
+
+  if (!user.length) {
+    throw createError({
+      statusCode: 401,
+      message: 'User not found',
+    })
+  }
+
+  return user[0]
+}
+
+export async function getCurrentOrganizationId(event: H3Event): Promise<number> {
+  const user = await getCurrentUser(event)
+
+  if (!user.currentOrganizationId) {
+    throw createError({
+      statusCode: 400,
+      message: 'No current organization set for user',
+    })
+  }
+
+  return user.currentOrganizationId
+}
+
 export async function requireOrganizationAccess(
   event: H3Event,
   organizationId: number,
