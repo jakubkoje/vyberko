@@ -49,8 +49,7 @@
   },
   "pnpm": {
     "overrides": {
-      "nuxt": "4.1.2",
-      "vite": "npm:rolldown-vite@latest"
+      "nuxt": "4.1.2"
     },
     "onlyBuiltDependencies": [
       "@parcel/watcher",
