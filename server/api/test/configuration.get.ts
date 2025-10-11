@@ -51,15 +51,12 @@ export default defineEventHandler(async (event) => {
     console.log(`Retrieved existing test session for code: ${code}`, sessionDates)
   }
 
-  // For now, return example configuration with session dates
-  // In production, this should come from database
-  return {
+  // Base test configuration that will be reused
+  const baseTestConfig = {
     title: "Odborny test",
     description: "Test test je na overenie odbornych zrusti praxe, pre pozicii, ktoru sa hlasite.",
     showTimer: true,
-    timeLimit: 900, // 15 minutes in seconds
-    startDate: sessionDates.startDate, // ISO 8601 format from session
-    endDate: sessionDates.endDate, // ISO 8601 format from session
+    timeLimit: 300, // 5 minutes per test
     headerView: "advanced",
     pages: [
       {
@@ -125,6 +122,40 @@ export default defineEventHandler(async (event) => {
         ]
       }
     ]
+  }
+
+  // Create multiple tests by duplicating the base configuration
+  const tests = [
+    {
+      ...baseTestConfig,
+      id: 'test-1',
+      title: 'Test 1: Písanie na klávesnici - Rýchlosť',
+      description: 'V tomto teste budete hodnotení za rýchlosť písania na klávesnici.'
+    },
+    {
+      ...baseTestConfig,
+      id: 'test-2', 
+      title: 'Test 2: Písanie na klávesnici - Presnosť',
+      description: 'V tomto teste budete hodnotení za presnosť písania na klávesnici.'
+    },
+    {
+      ...baseTestConfig,
+      id: 'test-3',
+      title: 'Test 3: Písanie na klávesnici - Kombinácia',
+      description: 'V tomto teste budete hodnotení za kombináciu rýchlosti a presnosti.'
+    }
+  ]
+
+  // Return multiple tests with session data
+  return {
+    tests,
+    session: {
+      startDate: sessionDates.startDate,
+      endDate: sessionDates.endDate,
+      accessCode: code,
+      currentTestIndex: 0,
+      completedTests: []
+    }
   }
 })
 

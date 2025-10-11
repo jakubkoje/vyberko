@@ -1,246 +1,309 @@
 <template>
-  <div
-    v-if="page"
-    class="relative"
-  >
-    <div class="hidden lg:block">
-      <UColorModeImage
-        light="/images/light/line-1.svg"
-        dark="/images/dark/line-1.svg"
-        class="absolute pointer-events-none pb-10 left-0 top-0 object-cover h-[650px]"
-      />
-    </div>
-
-    <UPageHero
-      :description="page.description"
-      :ui="{
-        container: 'md:pt-18 lg:pt-20',
-        title: 'max-w-3xl mx-auto'
-      }"
-    >
-      <template #top>
-        <HeroBackground />
-      </template>
-
-      <template #title>
-        <MDC
-          :value="page.title"
-          unwrap="p"
-        />
-      </template>
-
-      <template #links>
-        <div class="flex flex-col items-center gap-4 w-full max-w-md mx-auto mt-8">
-          <UFormGroup
-            label="Zadajte váš prístupový kód"
-            class="w-full"
-            size="xl"
-          >
+  <div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                <UIcon name="i-lucide-building-2" class="text-white text-xl" />
+              </div>
+              <div>
+                <h1 class="text-lg font-semibold text-gray-900">Centrálny informačný systém štátnej služby</h1>
+                <p class="text-sm text-gray-600">Digitálny výberový test</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
             <UInput
-              v-model="accessCode"
-              placeholder="XXXX-XXXX-XXXX"
-              size="xl"
-              class="text-center"
-              :ui="{ base: 'text-center uppercase' }"
-              @keyup.enter="startTest"
-            />
-          </UFormGroup>
-          <UButton
-            size="xl"
-            color="primary"
-            block
-            :disabled="!accessCode || accessCode.length < 5"
-            @click="startTest"
-          >
-            Spustiť test
-            <template #trailing>
-              <UIcon name="i-lucide-arrow-right" />
-            </template>
+              v-model="searchQuery"
+              placeholder="Zadajte hľadaný výraz"
+              class="w-64"
+            >
+              <template #trailing>
+                <UIcon name="i-lucide-search" class="text-gray-400" />
+              </template>
+            </UInput>
+            <UButton color="green" variant="solid">
+              Prihlásiť sa
+            </UButton>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex space-x-8 py-3">
+          <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Aktuality</a>
+          <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Výberové konania</a>
+          <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Výstupy pre verejnosť</a>
+          <a href="#" class="text-gray-700 hover:text-blue-600 font-medium flex items-center">
+            Informácie
+            <UIcon name="i-lucide-chevron-down" class="ml-1 text-sm" />
+          </a>
+          <a href="#" class="text-gray-700 hover:text-blue-600 font-medium">Kontakty</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-blue-50 to-indigo-100 py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-gray-900 mb-6">
+            Vyberte si z <span class="text-blue-600">105 voľných miest</span> v štátnej službe
+          </h1>
+          <p class="text-xl text-gray-600 mb-8 max-w-4xl mx-auto">
+            Verejný portál Centrálneho informačného systému štátnej služby poskytuje informácie a služby verejnosti, 
+            uchádzačom o štátnu službu, štátnym zamestnancom, bývalým štátnym zamestnancom a absolventom.
+          </p>
+          
+          <!-- Access Code Form -->
+          <div class="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+            <h2 class="text-2xl font-semibold text-gray-900 mb-6">Spustiť digitálny test</h2>
+            <UFormGroup
+              label="Zadajte váš prístupový kód"
+              class="w-full mb-4"
+            >
+              <UInput
+                v-model="accessCode"
+                placeholder="XXXX-XXXX-XXXX"
+                size="lg"
+                class="text-center mb-3"
+                :ui="{ base: 'text-center uppercase' }"
+                @keyup.enter="startTest"
+              />
+            </UFormGroup>
+            <UButton
+              size="lg"
+              color="primary"
+              block
+              :disabled="!accessCode || accessCode.length < 5"
+              @click="startTest"
+            >
+              Spustiť test
+              <template #trailing>
+                <UIcon name="i-lucide-arrow-right" />
+              </template>
+            </UButton>
+            <a href="#" class="text-blue-600 hover:text-blue-700 text-sm mt-4 inline-block">
+              Zobraziť vyhlásené výberové konania
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+        <!-- Applicant Section -->
+        <div class="bg-white rounded-lg shadow-md p-8">
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+              <UIcon name="i-lucide-user" class="text-blue-600 text-xl" />
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900">Uchádzač o štátnu službu</h2>
+          </div>
+          <p class="text-gray-600 mb-6">
+            Nájdite si vhodnú pozíciu, vytvorte si profil a vyhľadávajte podľa vašich preferencií. 
+            Uchádzajte sa o pozície v štátnej správe a staňte sa súčasťou verejnej služby.
+          </p>
+          <UButton color="primary" variant="outline">
+            Začať uchádzanie
           </UButton>
         </div>
-      </template>
-    </UPageHero>
 
-    <UPageSection
-      :description="page.section.description"
-      :features="page.section.features"
-      orientation="horizontal"
-      :ui="{
-        container: 'lg:px-0 2xl:px-20 mx-0 max-w-none md:mr-10',
-        features: 'gap-0'
-      }"
-      reverse
-    >
-      <template #title>
-        <MDC
-          :value="page.section.title"
-          class="sm:*:leading-11"
-        />
-      </template>
-      <img
-        :src="page.section.images.desktop"
-        :alt="page.section.title"
-        class="hidden lg:block 2xl:hidden left-0 w-full max-w-2xl"
-      >
-      <img
-        :src="page.section.images.mobile"
-        :alt="page.section.title"
-        class="block lg:hidden 2xl:block 2xl:w-full 2xl:max-w-2xl"
-      >
-    </UPageSection>
-
-    <USeparator :ui="{ border: 'border-primary/30' }" />
-
-    <UPageSection
-      id="features"
-      :description="page.features.description"
-      :features="page.features.features"
-      :ui="{
-        title: 'text-left @container relative flex',
-        description: 'text-left'
-      }"
-      class="relative overflow-hidden"
-    >
-      <div class="absolute rounded-full -left-10 top-10 size-[300px] z-10 bg-primary opacity-30 blur-[200px]" />
-      <div class="absolute rounded-full -right-10 -bottom-10 size-[300px] z-10 bg-primary opacity-30 blur-[200px]" />
-      <template #title>
-        <MDC
-          :value="page.features.title"
-          class="*:leading-9"
-        />
-        <div class="hidden @min-[1020px]:block">
-          <UColorModeImage
-            light="/images/light/line-2.svg"
-            dark="/images/dark/line-2.svg"
-            class="absolute top-0 right-0 size-full transform scale-95 translate-x-[70%]"
-          />
+        <!-- Graduate Section -->
+        <div class="bg-white rounded-lg shadow-md p-8">
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+              <UIcon name="i-lucide-graduation-cap" class="text-green-600 text-xl" />
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900">Absolvent</h2>
+          </div>
+          <p class="text-gray-600 mb-6">
+            Vytvorte si profil absolventa, vyhľadajte si vhodné pozície alebo sa zaregistrujte 
+            v databáze absolventov. Nájdite svoju cestu v štátnej správe.
+          </p>
+          <UButton color="green" variant="outline">
+            Registrovať sa ako absolvent
+          </UButton>
         </div>
-      </template>
-    </UPageSection>
+      </div>
 
-    <USeparator :ui="{ border: 'border-primary/30' }" />
-
-    <UPageSection
-      id="steps"
-      :description="page.steps.description"
-      class="relative overflow-hidden"
-    >
-      <template #headline>
-        <UColorModeImage
-          light="/images/light/line-3.svg"
-          dark="/images/dark/line-3.svg"
-          class="absolute -top-10 sm:top-0 right-1/2 h-24"
-        />
-      </template>
-      <template #title>
-        <MDC :value="page.steps.title" />
-      </template>
-
-      <template #features>
-        <UPageCard
-          v-for="(step, index) in page.steps.items"
-          :key="index"
-          class="group"
-          :ui="{ container: 'p-4 sm:p-4', title: 'flex items-center gap-1' }"
-        >
-          <UColorModeImage
-            v-if="step.image"
-            :light="step.image?.light"
-            :dark="step.image?.dark"
-            :alt="step.title"
-            class="size-full"
-          />
-
-          <div class="flex flex-col gap-2">
-            <span class="text-lg font-semibold">
-              {{ step.title }}
-            </span>
-            <span class="text-sm text-muted">
-              {{ step.description }}
+      <!-- Create Account Section -->
+      <div class="bg-blue-50 rounded-lg p-8 mb-16">
+        <div class="text-center">
+          <h2 class="text-3xl font-bold text-gray-900 mb-4">Vytvorte si používateľský účet</h2>
+          <p class="text-lg text-gray-600 mb-8 max-w-3xl mx-auto">
+            Vytvorením používateľského účtu získate prístup k správe vášho profilu, 
+            možnosti uchádzania sa o pozície a využívaniu ďalších služieb portálu.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <UButton size="lg" color="primary">
+              Vytvoriť používateľský účet
+            </UButton>
+            <span class="text-gray-600 flex items-center justify-center">
+              Máte vytvorený používateľský účet?
+              <UButton variant="link" color="primary" class="ml-2">
+                Prihlásiť sa
+              </UButton>
             </span>
           </div>
-        </UPageCard>
-      </template>
-    </UPageSection>
-
-
-    <UPageSection
-      id="faq"
-      :title="page.faq.title"
-      :description="page.faq.description"
-    >
-      <template #headline>
-        <UColorModeImage
-          light="/images/light/line-5.svg"
-          dark="/images/dark/line-5.svg"
-          class="absolute -top-10 sm:top-0 right-1/2 h-24"
-        />
-      </template>
-      <template #title>
-        <MDC :value="page.faq.title" />
-      </template>
-
-      <UContainer>
-        <UAccordion
-          :items="page.faq.items"
-          :ui="{ wrapper: 'flex flex-col gap-4' }"
-          size="xl"
-          variant="soft"
-        >
-          <template #default="{ item, open }">
-            <UButton
-              variant="ghost"
-              class="w-full justify-between"
-              size="xl"
-            >
-              <span class="text-left font-semibold">{{ item.question }}</span>
-              <UIcon
-                :name="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-                class="ms-auto"
-              />
-            </UButton>
-          </template>
-          <template #item="{ item }">
-            <div class="text-muted p-4">
-              {{ item.answer }}
-            </div>
-          </template>
-        </UAccordion>
-      </UContainer>
-    </UPageSection>
-
-    <USeparator />
-
-    <UPageCTA
-      :title="page.cta.title"
-      :description="page.cta.description"
-      variant="naked"
-      class="overflow-hidden @container"
-    >
-      <template #title>
-        <MDC :value="page.cta.title" />
-
-        <div class="@max-[1280px]:hidden">
-          <UColorModeImage
-            light="/images/light/line-6.svg"
-            dark="/images/dark/line-6.svg"
-            class="absolute left-10 -top-10 sm:top-0 h-full"
-          />
-          <UColorModeImage
-            light="/images/light/line-7.svg"
-            dark="/images/dark/line-7.svg"
-            class="absolute right-0 bottom-0 h-full"
-          />
         </div>
-      </template>
+      </div>
 
-      <LazyStarsBg />
-    </UPageCTA>
+      <!-- News Section -->
+      <section class="mb-16">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-3xl font-bold text-gray-900">Aktuality</h2>
+          <UButton variant="link" color="primary">
+            Zobraziť viac aktualít
+            <UIcon name="i-lucide-arrow-right" class="ml-1" />
+          </UButton>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <article class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="h-48 bg-gradient-to-r from-blue-600 to-blue-700 flex items-center justify-center">
+              <div class="text-center text-white">
+                <h3 class="text-lg font-semibold mb-2">CENTRÁLNY INFORMAČNÝ SYSTÉM</h3>
+                <p class="text-sm opacity-90">ŠTÁTNEJ SLUŽBY (CISŠS)</p>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center text-sm text-gray-500 mb-3">
+                <UIcon name="i-lucide-calendar" class="mr-2" />
+                7. máj 2025
+              </div>
+              <h4 class="text-xl font-semibold text-gray-900 mb-3">
+                <a href="#" class="hover:text-blue-600">Aktualizácia používateľskej príručky</a>
+              </h4>
+              <p class="text-gray-600">
+                Nová verzia používateľskej príručky je dostupná s aktualizovanými informáciami 
+                o digitálnom výberovom teste a nových funkciách systému.
+              </p>
+            </div>
+          </article>
+
+          <article class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="h-48 bg-gradient-to-r from-green-600 to-green-700 flex items-center justify-center">
+              <div class="text-center text-white">
+                <UIcon name="i-lucide-message-square" class="text-4xl mb-2" />
+                <h3 class="text-lg font-semibold">SPÄTNÁ VÄZBA</h3>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center text-sm text-gray-500 mb-3">
+                <UIcon name="i-lucide-calendar" class="mr-2" />
+                7. máj 2025
+              </div>
+              <h4 class="text-xl font-semibold text-gray-900 mb-3">
+                <a href="#" class="hover:text-blue-600">Spätná väzba na služby verejného portálu CISŠS</a>
+              </h4>
+              <p class="text-gray-600">
+                Vaša spätná väzba je pre nás dôležitá. Pomôžte nám zlepšiť služby 
+                verejného portálu vyplnením krátkeho dotazníka.
+              </p>
+            </div>
+          </article>
+
+          <article class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="h-48 bg-gradient-to-r from-purple-600 to-purple-700 flex items-center justify-center">
+              <div class="text-center text-white">
+                <UIcon name="i-lucide-shield-check" class="text-4xl mb-2" />
+                <h3 class="text-lg font-semibold">KOMPLEXNÉ RIEŠENIE</h3>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center text-sm text-gray-500 mb-3">
+                <UIcon name="i-lucide-calendar" class="mr-2" />
+                1. jún 2024
+              </div>
+              <h4 class="text-xl font-semibold text-gray-900 mb-3">
+                <a href="#" class="hover:text-blue-600">Prínosy nového komplexného riešenia centrálneho informačného systému štátnej služby (CISŠS) pre občana a štátnu službu</a>
+              </h4>
+              <p class="text-gray-600">
+                Zoznámte sa s výhodami nového systému, ktorý zefektívňuje komunikáciu 
+                medzi občanmi a štátnou správou.
+              </p>
+            </div>
+          </article>
+
+          <article class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="h-48 bg-gradient-to-r from-orange-600 to-orange-700 flex items-center justify-center">
+              <div class="text-center text-white">
+                <UIcon name="i-lucide-zap" class="text-4xl mb-2" />
+                <h3 class="text-lg font-semibold">EFEKTÍVNOSŤ</h3>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center text-sm text-gray-500 mb-3">
+                <UIcon name="i-lucide-calendar" class="mr-2" />
+                1. jún 2024
+              </div>
+              <h4 class="text-xl font-semibold text-gray-900 mb-3">
+                <a href="#" class="hover:text-blue-600">Služby verejného portálu: zefektívnenie interakcie so služobnými úradmi</a>
+              </h4>
+              <p class="text-gray-600">
+                Nové funkcie portálu umožňujú rýchlejšiu a jednoduchšiu komunikáciu 
+                so služobnými úradmi a zjednodušujú administratívne procesy.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Useful Links Section -->
+      <section class="bg-white rounded-lg shadow-md p-8 mb-16">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Užitočné odkazy</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-4">
+            <a href="#" class="block text-blue-600 hover:text-blue-700 hover:underline">
+              Úrad vlády Slovenskej republiky
+            </a>
+            <a href="#" class="block text-blue-600 hover:text-blue-700 hover:underline">
+              Národná agentúra pre sieťové a elektronické služby
+            </a>
+            <a href="#" class="block text-blue-600 hover:text-blue-700 hover:underline">
+              Ministerstvo investícií, regionálneho rozvoja a informatizácie SR
+            </a>
+          </div>
+          <div class="space-y-4">
+            <a href="#" class="block text-blue-600 hover:text-blue-700 hover:underline">
+              Elektronická Zbierka zákonov Slovenskej republiky
+            </a>
+            <a href="#" class="block text-blue-600 hover:text-blue-700 hover:underline">
+              Ústredný portál verejnej správy
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-blue-900 text-white py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="text-sm">Dotazník spokojnosti</p>
+          </div>
+          <div>
+            <p class="text-sm">Našli ste na stránke chybu?</p>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 </template>
 
 <script setup lang="ts">
 const accessCode = ref('')
+const searchQuery = ref('')
 
 const startTest = () => {
   if (accessCode.value && accessCode.value.length >= 5) {
@@ -249,187 +312,11 @@ const startTest = () => {
   }
 }
 
-const page = ref({
-  seo: {
-    title: "Digitálny výberový test - Štátna správa SR",
-    description: "Moderný digitálny systém na hodnotenie uchádzačov o pozície v štátnej správe Slovenskej republiky."
-  },
-  title: "Digitálny výberový test pre [štátnu správu]{.text-primary}",
-  description: "Vitajte v modernom systéme hodnotenia uchádzačov. Zadajte váš jedinečný prístupový kód a začnite test.",
-  hero: {},
-  section: {
-    title: "[Moderné]{.text-primary} riešenie výberového konania",
-    description: "Prechod z papierových testov na digitálnu platformu prináša efektívnosť, presnosť a pohodlie pre všetkých účastníkov.",
-    images: {
-      mobile: "/images/macbook-mobile.svg",
-      desktop: "/images/macbook.svg"
-    },
-    features: [
-      {
-        title: "Bezpečný prístup",
-        description: "Každý uchádzač dostane jedinečný jednorazový prístupový kód, ktorý zabezpečuje férovosť a bezpečnosť celého procesu hodnotenia.",
-        class: "border-l border-primary pl-4"
-      },
-      {
-        title: "Intuitívne rozhranie",
-        description: "Jednoduché a prehľadné rozhranie, ktoré vás krok za krokom prevedie celým testom. Žiadne technické znalosti nie sú potrebné.",
-        class: "border-l border-default pt-4 pl-4"
-      },
-      {
-        title: "Okamžité vyhodnotenie",
-        description: "Po dokončení testu systém automaticky vyhodnotí vaše výsledky a poskytne spätnú väzbu. Celý proces je transparentný a spravodlivý.",
-        class: "border-l border-default pt-4 pl-4"
-      }
-    ]
-  },
-  features: {
-    title: "Čo môžete [očakávať]{.text-primary} počas testu",
-    description: "Digitálny test je navrhnutý tak, aby bol jednoduchý, spravodlivý a efektívny pre všetkých uchádzačov.",
-    features: [
-      {
-        title: "Test písania na klávesnici",
-        description: "Hodnotenie rýchlosti a presnosti písania na klávesnici - základné zručnosti potrebné pre administratívne pozície.",
-        icon: "i-lucide-keyboard",
-        ui: {
-          leading: "bg-accented/50 p-2 rounded-md border border-muted border-dashed"
-        }
-      },
-      {
-        title: "Časový limit",
-        description: "Test má stanovený časový limit. Sledujte zostávajúci čas na obrazovke a prispôsobte svoje tempo.",
-        icon: "i-lucide-clock",
-        ui: {
-          leading: "bg-accented/50 p-2 rounded-md border border-muted border-dashed"
-        }
-      },
-      {
-        title: "Automatické ukladanie",
-        description: "Váš postup sa priebežne automaticky ukladá, takže sa nemusíte obávať straty dát.",
-        icon: "i-lucide-save",
-        ui: {
-          leading: "bg-accented/50 p-2 rounded-md border border-muted border-dashed"
-        }
-      },
-      {
-        title: "Jednoduché inštrukcie",
-        description: "Pred začiatkom každej časti testu dostanete jasné inštrukcie a môžete si precvičiť ovládanie.",
-        icon: "i-lucide-file-text",
-        ui: {
-          leading: "bg-accented/50 p-2 rounded-md border border-muted border-dashed"
-        }
-      },
-      {
-        title: "Technická podpora",
-        description: "V prípade technických problémov je k dispozícii tím podpory, ktorý vám pomôže.",
-        icon: "i-lucide-headphones",
-        ui: {
-          leading: "bg-accented/50 p-2 rounded-md border border-muted border-dashed"
-        }
-      },
-      {
-        title: "Transparentné hodnotenie",
-        description: "Po dokončení testu získate spätnú väzbu o vašom výkone. Hodnotenie je objektívne a automatizované.",
-        icon: "i-lucide-chart-bar",
-        ui: {
-          leading: "bg-accented/50 p-2 rounded-md border border-muted border-dashed"
-        }
-      }
-    ]
-  },
-  steps: {
-    title: "Absolvujte test v [3 jednoduchých krokoch]{.text-primary}",
-    description: "Postupujte podľa týchto krokov a úspešne dokončíte digitálny výberový test.",
-    items: [
-      {
-        title: "1. Zadajte prístupový kód",
-        description: "Zadajte jedinečný prístupový kód, ktorý ste dostali emailom alebo poštou. Tento kód je platný iba jedenkrát a zabezpečuje, že test absolvujete vy osobne.",
-        image: {
-          light: "/images/light/connect.svg",
-          dark: "/images/dark/connect.svg"
-        }
-      },
-      {
-        title: "2. Prečítajte si inštrukcie",
-        description: "Pred začiatkom testu sa oboznámte s inštrukciami. Môžete si vyskúšať krátku ukážku, aby ste sa zoznámili s rozhraním a ovládaním.",
-        image: {
-          light: "/images/light/optimize.svg",
-          dark: "/images/dark/optimize.svg"
-        }
-      },
-      {
-        title: "3. Absolvujte test a odošlite",
-        description: "Dokončite všetky časti testu v stanovenom čase. Po ukončení systém automaticky vyhodnotí vaše výsledky a dostanete spätnú väzbu.",
-        image: {
-          light: "/images/light/track.svg",
-          dark: "/images/dark/track.svg"
-        }
-      }
-    ]
-  },
-  faq: {
-    title: "Často kladené [otázky]{.text-primary}",
-    description: "Odpovede na najčastejšie otázky o digitálnom výberovom teste.",
-    items: [
-      {
-        label: "Ako získam prístupový kód?",
-        question: "Ako získam prístupový kód?",
-        answer: "Prístupový kód dostanete emailom alebo poštou po úspešnom podaní prihlášky na výberové konanie. Kód je jedinečný a platný iba jedenkrát pre vás.",
-        defaultOpen: false
-      },
-      {
-        label: "Ako dlho trvá test?",
-        question: "Ako dlho trvá test?",
-        answer: "Test má stanovený časový limit, ktorý sa zobrazí na začiatku. Zvyčajne trvá 30-45 minút. Počas testu vidíte zostávajúci čas na obrazovke.",
-        defaultOpen: false
-      },
-      {
-        label: "Čo ak mám technické problémy?",
-        question: "Čo ak mám technické problémy?",
-        answer: "V prípade technických problémov kontaktujte technickou podporu na uvedenom telefónnom čísle alebo emaile. Váš prístupový kód zostane aktívny, kým test úspešne nedokončíte.",
-        defaultOpen: false
-      },
-      {
-        label: "Môžem test prerušiť a pokračovať neskôr?",
-        question: "Môžem test prerušiť a pokračovať neskôr?",
-        answer: "Test by ste mali dokončiť v jednom sedení. Váš postup sa síce automaticky ukladá, ale časový limit beží od momentu, kedy test začnete.",
-        defaultOpen: false
-      },
-      {
-        label: "Aké technické vybavenie potrebujem?",
-        question: "Aké technické vybavenie potrebujem?",
-        answer: "Potrebujete počítač alebo notebook s fungujúcou klávesnicou a pripojenie na internet. Test funguje v moderných webových prehliadačoch (Chrome, Firefox, Safari, Edge).",
-        defaultOpen: false
-      },
-      {
-        label: "Kedy sa dozviem výsledky?",
-        question: "Kedy sa dozviem výsledky?",
-        answer: "Základné výsledky uvidíte ihneď po dokončení testu. Podrobné vyhodnotenie a informácie o ďalších krokoch výberového konania dostanete emailom do 5 pracovných dní.",
-        defaultOpen: false
-      },
-      {
-        label: "Môžem test zopakovať?",
-        question: "Môžem test zopakovať?",
-        answer: "Každý prístupový kód je jednorazový a platný iba pre jedno absolvovanie testu. Opakovanie testu nie je možné, preto test absolvujte až keď ste na to pripravení.",
-        defaultOpen: false
-      },
-      {
-        label: "Je test prispôsobený pre ľudí so zdravotným postihnutím?",
-        question: "Je test prispôsobený pre ľudí so zdravotným postihnutím?",
-        answer: "Áno, systém podporuje rôzne formy prístupnosti. Ak potrebujete špeciálne úpravy, kontaktujte nás pred absolvovaním testu a dohodneme vhodné riešenie.",
-        defaultOpen: false
-      }
-    ]
-  },
-  cta: {
-    title: "Máte otázky alebo potrebujete [pomoc]{.text-primary}?",
-    description: "Náš tím technickej podpory je tu pre vás. Kontaktujte nás pred začatím testu, ak máte akékoľvek nejasnosti."
-  }
-})
 
 useSeoMeta({
-  title: page.value.seo?.title || page.value.title,
-  ogTitle: page.value.seo?.title || page.value.title,
-  description: page.value.seo?.description || page.value.description,
-  ogDescription: page.value.seo?.description || page.value.description
+  title: "Digitálny výberový test - Centrálny informačný systém štátnej služby",
+  ogTitle: "Digitálny výberový test - Centrálny informačný systém štátnej služby",
+  description: "Moderný digitálny systém na hodnotenie uchádzačov o pozície v štátnej správe Slovenskej republiky.",
+  ogDescription: "Moderný digitálny systém na hodnotenie uchádzačov o pozície v štátnej správe Slovenskej republiky."
 })
 </script>

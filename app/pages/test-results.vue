@@ -26,6 +26,26 @@
 
           <UDivider class="my-8" />
 
+          <!-- Individual Test Results (if multiple tests) -->
+          <div v-if="results?.tests && results.tests.length > 1" class="mb-8">
+            <h3 class="text-xl font-semibold mb-4 text-center">Výsledky jednotlivých testov</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              <div 
+                v-for="(test, index) in results.tests" 
+                :key="test.testId"
+                class="bg-white rounded-lg border p-4 text-center"
+              >
+                <h4 class="font-semibold text-sm mb-2">{{ test.testTitle }}</h4>
+                <div class="text-2xl font-bold mb-2" :class="test.percentage >= 60 ? 'text-green-600' : 'text-red-600'">
+                  {{ test.percentage }}%
+                </div>
+                <div class="text-xs text-gray-500">
+                  {{ test.score }}/{{ test.total }} správnych odpovedí
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="space-y-6 text-left max-w-md mx-auto">
             <UAlert
               :color="isPassed ? 'green' : 'blue'"
@@ -114,7 +134,11 @@ const results = ref<any>(null)
 
 const isPassed = computed(() => {
   if (!results.value) return false
-  // Consider 60% or higher as passing
+  // For multiple tests, use overall percentage
+  if (results.value.overall) {
+    return results.value.overall.percentage >= 60
+  }
+  // Fallback for single test results
   return results.value.percentage >= 60
 })
 

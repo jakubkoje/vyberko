@@ -34,8 +34,9 @@
             <UBadge
               v-if="showTimer && timeRemaining !== null"
               :color="timeRemaining < 300 ? 'red' : timeRemaining < 600 ? 'orange' : 'primary'"
-              size="lg"
+              size="xl"
               variant="soft"
+              class="text-xl font-bold"
             >
               <UIcon name="i-lucide-clock" class="mr-1" />
               {{ formatTime(timeRemaining) }}
@@ -94,7 +95,7 @@
                 v-if="element.type !== 'html'"
                 class="text-sm font-semibold text-primary mb-2"
               >
-                Otázka {{ index + 1 }}
+                {{ element?.title}}
               </div>
 
               <!-- HTML Element -->

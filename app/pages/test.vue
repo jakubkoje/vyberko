@@ -39,13 +39,33 @@
       </UAlert>
 
       <!-- Test Content -->
-      <ClientOnly v-else-if="surveyConfig">
+      <ClientOnly v-else-if="currentTest">
+        <div class="mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="text-2xl font-semibold">{{ currentTest.title }}</h2>
+              <p class="text-muted">{{ currentTest.description }}</p>
+            </div>
+            <UBadge color="blue" variant="soft">
+              Test {{ currentTestIndex + 1 }} z {{ tests.length }}
+            </UBadge>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+            <div 
+              class="bg-primary h-2 rounded-full transition-all duration-300"
+              :style="{ width: `${((currentTestIndex + 1) / tests.length) * 100}%` }"
+            ></div>
+          </div>
+        </div>
+        
         <SurveyCustomPreview
-          :survey-data="surveyConfig"
+          :survey-data="currentTest"
           :start-date="startDate"
           :end-date="endDate"
           :access-code="code"
-          @complete="handleComplete"
+          @complete="handleTestComplete"
           @time-expired="handleTimeExpired"
         />
       </ClientOnly>
@@ -58,10 +78,16 @@ const route = useRoute()
 const code = ref(route.query.code as string || '')
 const isCompleted = ref(false)
 const isLoading = ref(true)
-const surveyConfig = ref<any>(null)
+const tests = ref<any[]>([])
+const session = ref<any>(null)
+const currentTestIndex = ref(0)
+const testResults = ref<any[]>([])
 const error = ref<string | null>(null)
 const startDate = ref<string | null>(null)
 const endDate = ref<string | null>(null)
+
+const currentTest = computed(() => tests.value[currentTestIndex.value])
+const isLastTest = computed(() => currentTestIndex.value >= tests.value.length - 1)
 
 // Redirect if no code
 if (!code.value) {
@@ -74,42 +100,40 @@ const fetchTestConfiguration = async () => {
     isLoading.value = true
     error.value = null
     
-    // TODO: Replace with actual API call in production
-    // const response = await $fetch(`/api/test/configuration`, {
-    //   query: { code: code.value }
-    // })
+    // Fetch multiple tests from API
+    const response = await $fetch(`/api/test/configuration`, {
+      query: { code: code.value }
+    })
+
+    console.log('Response:', response)
     
-    // For now, use the example JSON structure
-    const response = await $fetch('/test.example.json')
-    surveyConfig.value = response
+    tests.value = response.tests
+    session.value = response.session
+    currentTestIndex.value = session.value.currentTestIndex || 0
     
-    // Use startDate and endDate directly from backend response
-    // This ensures timer is based on absolute dates, not calculated on each load
-    if (surveyConfig.value.showTimer) {
-      // Check if backend provided startDate and endDate
-      if (response.startDate && response.endDate) {
-        // Use dates from backend (preferred method)
-        startDate.value = response.startDate
-        endDate.value = response.endDate
-        
-        console.log('Using dates from backend:', {
-          start: startDate.value,
-          end: endDate.value
-        })
-      } else {
-        // Fallback: Calculate if not provided (backwards compatibility)
-        const now = new Date()
-        startDate.value = now.toISOString()
-        
-        const duration = surveyConfig.value.maxTimeToFinish || surveyConfig.value.timeLimit || 1800
-        const end = new Date(now.getTime() + duration * 1000)
-        endDate.value = end.toISOString()
-        
-        console.log('Calculated dates (fallback):', {
-          start: startDate.value,
-          end: endDate.value
-        })
-      }
+    // Use session dates for timer
+    if (session.value) {
+      startDate.value = session.value.startDate
+      endDate.value = session.value.endDate
+      
+      console.log('Using session dates:', {
+        start: startDate.value,
+        end: endDate.value,
+        currentTest: currentTestIndex.value
+      })
+    } else {
+      // Fallback: Calculate if not provided
+      const now = new Date()
+      startDate.value = now.toISOString()
+      
+      const duration = 900 // 15 minutes total for all tests
+      const end = new Date(now.getTime() + duration * 1000)
+      endDate.value = end.toISOString()
+      
+      console.log('Calculated dates (fallback):', {
+        start: startDate.value,
+        end: endDate.value
+      })
     }
   } catch (e: any) {
     error.value = e.message || 'Nepodarilo sa načítať konfiguráciu testu'
@@ -125,15 +149,15 @@ onMounted(() => {
 })
 
 // Calculate score based on correct answers
-const calculateScore = (answers: any) => {
-  if (!surveyConfig.value?.pages) return { score: 0, total: 0, percentage: 0, details: [] }
+const calculateScore = (answers: any, testConfig: any) => {
+  if (!testConfig?.pages) return { score: 0, total: 0, percentage: 0, details: [] }
   
   let correctCount = 0
   let totalQuestions = 0
   const details: any[] = []
   
   // Iterate through all pages and elements
-  surveyConfig.value.pages.forEach((page: any) => {
+  testConfig.pages.forEach((page: any) => {
     page.elements?.forEach((element: any) => {
       // Only check elements that have correctAnswer defined
       if (element.correctAnswer !== undefined && element.name) {
@@ -181,54 +205,65 @@ const calculateScore = (answers: any) => {
   }
 }
 
-// Calculate time spent
-const calculateTimeSpent = () => {
-  if (!startDate.value || !endDate.value) return null
+// Handle individual test completion
+const handleTestComplete = (results: any) => {
+  console.log('Test completed:', results)
   
-  const start = new Date(startDate.value)
-  const now = new Date()
-  const diffMs = now.getTime() - start.getTime()
-  return Math.floor(diffMs / 1000) // Time spent in seconds
+  // Calculate score for current test
+  const score = calculateScore(results.data, currentTest.value)
+  
+  // Store test result
+  const testResult = {
+    testId: currentTest.value.id,
+    testTitle: currentTest.value.title,
+    score,
+    data: results.data,
+    timestamp: new Date().toISOString()
+  }
+  
+  testResults.value.push(testResult)
+  
+  // Check if this is the last test
+  if (isLastTest.value) {
+    // All tests completed, navigate to results
+    handleAllTestsComplete()
+  } else {
+    // Move to next test
+    currentTestIndex.value++
+    
+    // Update session
+    if (session.value) {
+      session.value.currentTestIndex = currentTestIndex.value
+      session.value.completedTests.push(testResult.testId)
+    }
+  }
 }
 
-// Handle survey completion
-const handleComplete = async (results: any) => {
-  isCompleted.value = true
-  console.log('Survey results:', results)
+// Handle completion of all tests
+const handleAllTestsComplete = () => {
+  console.log('All tests completed:', testResults.value)
   
-  // Calculate score
-  const scoreData = calculateScore(results)
-  console.log('Score:', scoreData)
+  // Calculate overall score
+  const totalScore = testResults.value.reduce((sum, result) => sum + result.score, 0)
+  const totalQuestions = testResults.value.reduce((sum, result) => sum + result.total, 0)
+  const overallPercentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0
   
-  // TODO: Send results to backend
-  try {
-    const timeSpent = calculateTimeSpent()
-    
-    // await $fetch('/api/test/submit', {
-    //   method: 'POST',
-    //   body: {
-    //     code: code.value,
-    //     results,
-    //     score: scoreData,
-    //     timeSpent,
-    //     completedAt: new Date().toISOString()
-    //   }
-    // })
-    
-    // Clear saved progress
-    if (process.client) {
-      localStorage.removeItem(`test-progress-${code.value}`)
-      // Store results temporarily for results page
-      localStorage.setItem(`test-results-${code.value}`, JSON.stringify(scoreData))
-    }
-    
-    // Navigate to results page after delay
-    setTimeout(() => {
-      navigateTo(`/test-results?code=${code.value}`)
-    }, 1500)
-  } catch (error) {
-    console.error('Failed to submit results:', error)
+  // Store all results in localStorage
+  const finalResults = {
+    tests: testResults.value,
+    overall: {
+      score: totalScore,
+      total: totalQuestions,
+      percentage: Math.round(overallPercentage)
+    },
+    timestamp: new Date().toISOString(),
+    accessCode: code.value
   }
+  
+  localStorage.setItem(`test-results-${code.value}`, JSON.stringify(finalResults))
+  
+  // Navigate to results page
+  navigateTo(`/test-results?code=${code.value}`)
 }
 
 // Handle time expiration
@@ -241,7 +276,11 @@ const handleTimeExpired = async (results: any) => {
   alert('Čas vypršal! Test bude automaticky odoslaný.')
   
   // Submit with current answers
-  await handleComplete(results)
+  await handleTestComplete(results)
 }
-</script>
 
+useSeoMeta({
+  title: 'Digitálny výberový test',
+  description: 'Absolvujte digitálny výberový test pre štátnu službu.'
+})
+</script>
